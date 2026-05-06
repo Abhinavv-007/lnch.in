@@ -5,9 +5,14 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Inter"', "ui-sans-serif", "system-ui", "sans-serif"],
+        // Body now defaults to JetBrains Mono — the "developer terminal" voice
+        // requested for the public lnch.in surface. Inter is kept available as
+        // `font-ui` for places the typewriter feel reads as too noisy.
+        sans: ['"JetBrains Mono"', "ui-monospace", "Menlo", "monospace"],
+        ui: ['"Inter"', "ui-sans-serif", "system-ui", "sans-serif"],
         serif: ['"Cormorant Garamond"', '"DM Serif Display"', "Georgia", "serif"],
         mono: ['"JetBrains Mono"', "ui-monospace", "Menlo", "monospace"],
+        typewriter: ['"JetBrains Mono"', "ui-monospace", "Menlo", "monospace"],
       },
       colors: {
         // Anchor: deep near-black with a hint of warmth.
