@@ -17,6 +17,20 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     cf.listD1().catch(() => []),
     cf.listKv().catch(() => []),
   ]);
+  const trafficResults = await Promise.all(
+    zones.map((zone) =>
+      cf
+        .getZoneTraffic(zone)
+        .then((traffic) => ({ ok: true as const, traffic }))
+        .catch((error) => ({
+          ok: false as const,
+          zone,
+          reason: error instanceof Error ? error.message : "Cloudflare analytics unavailable",
+        })),
+    ),
+  );
+  const zoneTraffic = trafficResults.flatMap((result) => (result.ok ? [result.traffic] : []));
+  const trafficError = trafficResults.find((result) => !result.ok);
   return json({
     configured: true,
     account,
@@ -27,6 +41,11 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     })),
     workers: workers.map((w: any) => ({ name: w.id, ts: Date.parse(w.modified_on) })),
     zones,
+    traffic: {
+      configured: zoneTraffic.length > 0,
+      reason: zoneTraffic.length > 0 ? null : trafficError?.reason ?? null,
+      zones: zoneTraffic,
+    },
     d1Databases: d1,
     kvNamespaces: kv,
   });
