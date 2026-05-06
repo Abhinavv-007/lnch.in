@@ -14,6 +14,20 @@ export type ProjectIntegrationStatus = {
   customAdminApi?: boolean;
 };
 
+/**
+ * Per-project admin secret env-var name. Mirrors the server type in
+ * `functions/_lib/projects.ts`. Anything that isn't `LAUNCHOPS_ADMIN_SECRET`
+ * means "this project ships its own admin API and the lnch.in proxy must
+ * forward the per-project secret server-side".
+ */
+export type AdminSecretEnv =
+  | "LAUNCHOPS_ADMIN_SECRET"
+  | "MODIH_ADMIN_SECRET"
+  | "CLEX_ADMIN_SECRET"
+  | "CLEX_AI_ADMIN_SECRET"
+  | "DRIPED_ADMIN_SECRET"
+  | "TRGT_ADMIN_SECRET";
+
 export type Project = {
   slug: string;
   name: string;
@@ -27,7 +41,7 @@ export type Project = {
   /** Endpoints the API center can ping for health. */
   health?: string[];
   /** ‘inherits LAUNCHOPS_ADMIN_SECRET’ unless they have their own. */
-  adminSecretEnv?: "LAUNCHOPS_ADMIN_SECRET" | "MODIH_ADMIN_SECRET";
+  adminSecretEnv?: AdminSecretEnv;
 };
 
 export const PROJECTS: Project[] = [
@@ -63,9 +77,12 @@ export const PROJECTS: Project[] = [
       "https://signal.clex.in/health",
       "https://clex.in/vault/api/health",
     ],
-    adminSecretEnv: "LAUNCHOPS_ADMIN_SECRET",
+    adminSecretEnv: "CLEX_ADMIN_SECRET",
   },
   {
+    // Marketing site is ai.clex.in; the API + dashboard live on the new
+    // alias api.ai.clex.in. api.clex.in is the legacy hostname kept alive
+    // for backward-compat with any developer who already integrated.
     slug: "clex-ai",
     name: "Clex AI",
     kind: "api",
@@ -74,8 +91,11 @@ export const PROJECTS: Project[] = [
     blurb:
       "OpenAI-compatible gateway. 130+ models, smart routing, streaming, per-key analytics.",
     accent: "text-gilt-300",
-    health: ["https://ai.clex.in/api/health"],
-    adminSecretEnv: "LAUNCHOPS_ADMIN_SECRET",
+    health: [
+      "https://api.ai.clex.in/api/health",
+      "https://api.clex.in/api/health",
+    ],
+    adminSecretEnv: "CLEX_AI_ADMIN_SECRET",
   },
   {
     slug: "driped",
@@ -88,7 +108,7 @@ export const PROJECTS: Project[] = [
     accent: "text-sky-300",
     mobileApps: [{ platform: "android", label: "Driped Android" }],
     health: ["https://driped.in/api/health"],
-    adminSecretEnv: "LAUNCHOPS_ADMIN_SECRET",
+    adminSecretEnv: "DRIPED_ADMIN_SECRET",
   },
   {
     slug: "trgt",
@@ -100,7 +120,7 @@ export const PROJECTS: Project[] = [
       "F1-grade visual experience. Performance-heavy interactions, research-grade content.",
     accent: "text-rose-300",
     health: ["https://trgt.in/api/health"],
-    adminSecretEnv: "LAUNCHOPS_ADMIN_SECRET",
+    adminSecretEnv: "TRGT_ADMIN_SECRET",
   },
   {
     slug: "portfolio",

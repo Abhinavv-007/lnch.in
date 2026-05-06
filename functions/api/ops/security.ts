@@ -17,10 +17,16 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     "VERCEL_TOKEN",
     "VERCEL_TEAM_ID",
     "MODIH_ADMIN_SECRET",
+    "CLEX_ADMIN_SECRET",
+    "CLEX_AI_ADMIN_SECRET",
+    "DRIPED_ADMIN_SECRET",
+    "TRGT_ADMIN_SECRET",
     "FIREBASE_MODIH_PROJECT_ID",
     "FIREBASE_CLEX_PROJECT_ID",
+    "FIREBASE_CLEX_AI_PROJECT_ID",
     "FIREBASE_DRIPED_PROJECT_ID",
     "FIREBASE_TRGT_PROJECT_ID",
+    "FIREBASE_PORTFOLIO_PROJECT_ID",
   ];
   const e = env as unknown as Record<string, string | undefined>;
   const secrets = [
