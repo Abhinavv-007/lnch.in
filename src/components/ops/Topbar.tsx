@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Bell, Command, Search, Activity, Plus } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import { Bell, Command, Search, Activity, Plus, Eye } from "lucide-react";
 import { api } from "@/lib/api";
 
 type Session = { ok: boolean; user?: string; method?: "secret" | "session" };
 
 export default function Topbar({ onCommand }: { onCommand: () => void }) {
   const [_session, setSession] = useState<Session | null>(null);
+  const params = useParams<{ slug?: string }>();
+  // When viewing a project detail, "View public" jumps straight to that slug;
+  // otherwise it goes to the public landing.
+  const publicHref = params.slug ? `/projects/${params.slug}` : "/";
 
   useEffect(() => {
     api
@@ -39,6 +43,16 @@ export default function Topbar({ onCommand }: { onCommand: () => void }) {
           </kbd>
         </button>
 
+        <a
+          href={publicHref}
+          target="_blank"
+          rel="noreferrer"
+          className="hidden items-center gap-1.5 rounded-full border border-ink-600 bg-ink-900/70 px-3 py-1.5 text-xs text-ink-200 hover:border-gilt-500/60 hover:text-gilt-200 md:inline-flex"
+          title="See exactly what visitors see on the public page"
+        >
+          <Eye className="h-3.5 w-3.5" />
+          View public
+        </a>
         <button className="hidden h-9 w-9 items-center justify-center rounded-full border border-ink-600 bg-ink-900/70 text-ink-300 hover:text-gilt-200 md:inline-flex" title="System health">
           <Activity className="h-4 w-4" />
         </button>

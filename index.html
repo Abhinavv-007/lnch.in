@@ -23,11 +23,34 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,500;1,600&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <script>
+      // Resolve the active theme before first paint to avoid the light-on-dark
+      // flash. Persisted choice wins; otherwise we honor the system preference.
+      (function () {
+        try {
+          var stored = localStorage.getItem("lnch-theme");
+          var prefersLight =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: light)").matches;
+          var theme = stored || (prefersLight ? "light" : "dark");
+          var root = document.documentElement;
+          if (theme === "light") {
+            root.setAttribute("data-theme", "light");
+            root.classList.remove("dark");
+          } else {
+            root.removeAttribute("data-theme");
+            root.classList.add("dark");
+          }
+        } catch (_) {
+          /* ignore — localStorage may be blocked */
+        }
+      })();
+    </script>
   </head>
-  <body class="bg-ink-950 text-ink-100 antialiased font-sans">
+  <body class="bg-paper text-fg antialiased font-sans">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

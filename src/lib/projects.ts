@@ -57,7 +57,12 @@ export const PROJECTS: Project[] = [
       { platform: "android", label: "Clex Android" },
       { platform: "ios", label: "Clex iOS" },
     ],
-    health: ["https://clex.in/api/health"],
+    health: [
+      "https://clex.in/api/health",
+      "https://clex.in/chain/health",
+      "https://signal.clex.in/health",
+      "https://clex.in/vault/api/health",
+    ],
     adminSecretEnv: "LAUNCHOPS_ADMIN_SECRET",
   },
   {
@@ -69,7 +74,7 @@ export const PROJECTS: Project[] = [
     blurb:
       "OpenAI-compatible gateway. 130+ models, smart routing, streaming, per-key analytics.",
     accent: "text-gilt-300",
-    health: ["https://api.clex.in/v1/health", "https://ai.clex.in/api/health"],
+    health: ["https://ai.clex.in/api/health"],
     adminSecretEnv: "LAUNCHOPS_ADMIN_SECRET",
   },
   {
@@ -94,7 +99,7 @@ export const PROJECTS: Project[] = [
     blurb:
       "F1-grade visual experience. Performance-heavy interactions, research-grade content.",
     accent: "text-rose-300",
-    health: ["https://trgt.in/health"],
+    health: ["https://trgt.in/api/health"],
     adminSecretEnv: "LAUNCHOPS_ADMIN_SECRET",
   },
   {
