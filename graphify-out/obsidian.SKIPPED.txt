@@ -1,0 +1,1 @@
+Skipped Obsidian note export for 40125 nodes to avoid creating tens of thousands of files. graph.canvas and graph.json were generated instead.

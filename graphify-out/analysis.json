@@ -1,0 +1,170 @@
+{
+  "god_nodes": [
+    {
+      "id": "index_ww0eqhqg_n",
+      "label": "_n()",
+      "degree": 167
+    },
+    {
+      "id": "index_fetch",
+      "label": "fetch()",
+      "degree": 120
+    },
+    {
+      "id": "index_ihu7ej8c_q",
+      "label": "Q",
+      "degree": 96
+    },
+    {
+      "id": "index_c519olgd_n",
+      "label": "_n()",
+      "degree": 94
+    },
+    {
+      "id": "index_cis4lhcg_q",
+      "label": "Q",
+      "degree": 86
+    },
+    {
+      "id": "index_q9tjm6fk_q",
+      "label": "Q",
+      "degree": 86
+    },
+    {
+      "id": "index_bme9ebfn_j",
+      "label": "J",
+      "degree": 83
+    },
+    {
+      "id": "index_bdalznfp_q",
+      "label": "Q",
+      "degree": 83
+    },
+    {
+      "id": "index_clvvovrk_tn",
+      "label": "Tn",
+      "degree": 82
+    },
+    {
+      "id": "route_get",
+      "label": "GET()",
+      "degree": 82
+    }
+  ],
+  "surprising_connections": [
+    {
+      "source": "Clex Metallic Brand Mark",
+      "target": "CLEX Unified AI API",
+      "source_files": [
+        "clex-main 2/frontend-2/public/brand/clex-logo.png",
+        "clex-ai-main/index.html"
+      ],
+      "confidence": "AMBIGUOUS",
+      "relation": "semantically_similar_to",
+      "why": "ambiguous connection - not explicitly stated in source; crosses file types (doc \u2194 image); connects across different repos/directories; semantically similar concepts with no structural link; peripheral node `Clex Metallic Brand Mark` unexpectedly reaches hub `CLEX Unified AI API`"
+    },
+    {
+      "source": "Modih Disposable Email Landing Preview",
+      "target": "Privacy-First File Transfer",
+      "source_files": [
+        "modih-email-main/public/og-preview.jpg",
+        "clex-main 2/docs/clex-system-guide.md"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (doc \u2194 image); connects across different repos/directories; semantically similar concepts with no structural link; peripheral node `Modih Disposable Email Landing Preview` unexpectedly reaches hub `Privacy-First File Transfer`"
+    },
+    {
+      "source": "Clex Svelte App Shell",
+      "target": "CLEX Workspace",
+      "source_files": [
+        "clex-main 2/archive/old-frontend/apps-web/src/app.html",
+        "Portfolio-main/assets/case-studies/clex/workspace.webp"
+      ],
+      "confidence": "INFERRED",
+      "relation": "conceptually_related_to",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (image \u2194 doc); connects across different repos/directories; peripheral node `Clex Svelte App Shell` unexpectedly reaches hub `CLEX Workspace`"
+    },
+    {
+      "source": "Zero-Retention Privacy",
+      "target": "Commit Chain Reveal Protocol",
+      "source_files": [
+        "clex-ai-main/README.md",
+        "Portfolio-main/research/paper3/prototype/public/index.html"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; semantically similar concepts with no structural link; peripheral node `Zero-Retention Privacy` unexpectedly reaches hub `Commit Chain Reveal Protocol`"
+    },
+    {
+      "source": "Next.js Brand SVG Asset",
+      "target": "frontend-2 Primary Frontend",
+      "source_files": [
+        "f1-main/public/next.svg",
+        "clex-main 2/docs/clex-system-guide.md"
+      ],
+      "confidence": "AMBIGUOUS",
+      "relation": "conceptually_related_to",
+      "why": "ambiguous connection - not explicitly stated in source; crosses file types (doc \u2194 image); connects across different repos/directories"
+    },
+    {
+      "source": "AI Chat Model Routing",
+      "target": "Developer API Keys",
+      "source_files": [
+        "clex-ai-main/playground.html",
+        "modih-email-main/public/developer.html"
+      ],
+      "confidence": "INFERRED",
+      "relation": "semantically_similar_to",
+      "why": "inferred connection - not explicitly stated in source; connects across different repos/directories; semantically similar concepts with no structural link; peripheral node `AI Chat Model Routing` unexpectedly reaches hub `Developer API Keys`"
+    },
+    {
+      "source": "Global Network Globe Icon",
+      "target": "Three Delivery Routes",
+      "source_files": [
+        "f1-main/public/globe.svg",
+        "clex-main 2/frontend-2/features/index.html"
+      ],
+      "confidence": "INFERRED",
+      "relation": "conceptually_related_to",
+      "why": "inferred connection - not explicitly stated in source; crosses file types (doc \u2194 image); connects across different repos/directories; peripheral node `Global Network Globe Icon` unexpectedly reaches hub `Three Delivery Routes`"
+    }
+  ],
+  "suggested_questions": [
+    {
+      "type": "ambiguous_edge",
+      "question": "What is the exact relationship between `GoDaddy Turquoise Heart G Logo` and `Jio Blue Circle Wordmark Logo`?",
+      "why": "Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low."
+    },
+    {
+      "type": "ambiguous_edge",
+      "question": "What is the exact relationship between `CLEX` and `DRIPED Wordmark`?",
+      "why": "Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low."
+    },
+    {
+      "type": "ambiguous_edge",
+      "question": "What is the exact relationship between `The Hidden Watts of Attention Page` and `Hidden Watts Research OG Preview`?",
+      "why": "Edge tagged AMBIGUOUS (relation: references) - confidence is low."
+    },
+    {
+      "type": "ambiguous_edge",
+      "question": "What is the exact relationship between `CLEX API Developer Platform` and `Dashboard Social Icon Symbol Sprite`?",
+      "why": "Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low."
+    },
+    {
+      "type": "ambiguous_edge",
+      "question": "What is the exact relationship between `OpenAI SDK Drop-In Compatibility` and `React Logo Asset`?",
+      "why": "Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low."
+    },
+    {
+      "type": "ambiguous_edge",
+      "question": "What is the exact relationship between `Mobile Background Loop Music Transcript` and `Sunny Transcript Prompt Repetition`?",
+      "why": "Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low."
+    },
+    {
+      "type": "ambiguous_edge",
+      "question": "What is the exact relationship between `Formula One Hero Image` and `Vercel Triangle Logo`?",
+      "why": "Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low."
+    }
+  ]
+}
