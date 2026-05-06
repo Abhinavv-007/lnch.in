@@ -1,0 +1,67 @@
+# --------------------------------------------------------------------
+# lnch.in — secrets & build outputs ignore list.
+# Anything that may carry credentials must live above this comment.
+# --------------------------------------------------------------------
+
+# Secrets / credentials --------------------------------------------------
+.env
+.env.*
+!.env.example
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+*.pem
+*.key
+*-secret*.json
+firebase-*.json
+service-account*.json
+*-private-key*.json
+credentials*.json
+launchops-admin*
+
+# Cloudflare / Wrangler -------------------------------------------------
+.wrangler/
+.miniflare/
+worker-configuration.d.ts
+wrangler.local.toml
+
+# Vercel / hosts --------------------------------------------------------
+.vercel/
+.netlify/
+
+# Node ------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json.bak
+
+# Build outputs ---------------------------------------------------------
+dist/
+dist-ssr/
+build/
+.next/
+out/
+coverage/
+.turbo/
+
+# Editor / OS -----------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+Thumbs.db
+
+# Caches / tmp ----------------------------------------------------------
+.cache/
+.tmp/
+*.tmp
+*.log
+
+# Local Devin scratch files ---------------------------------------------
+.devin-scratch/
+
+# TypeScript build incrementals -----------------------------------------
+*.tsbuildinfo
