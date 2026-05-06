@@ -1,0 +1,57 @@
+# Copy to .dev.vars (gitignored) for local `wrangler pages dev`.
+# Production secrets must be configured via Cloudflare Pages → Settings → Environment Variables
+# or `wrangler pages secret put <NAME>`.
+
+# === Admin gate ==================================================================
+LAUNCHOPS_ADMIN_SECRET=
+LAUNCHOPS_RP_ID=localhost
+LAUNCHOPS_RP_ORIGIN=http://localhost:8788
+
+# === GitHub ======================================================================
+# Fine-grained PAT or classic with: repo, read:user, read:org
+GITHUB_TOKEN=
+
+# === Cloudflare (for monitoring your own CF projects via API) ====================
+CLOUDFLARE_API_TOKEN=
+CLOUDFLARE_ACCOUNT_ID=
+CLOUDFLARE_ZONE_ID=
+
+# === Vercel ======================================================================
+VERCEL_TOKEN=
+VERCEL_TEAM_ID=
+
+# === Project admin secrets =======================================================
+MODIH_ADMIN_SECRET=
+# Other projects fall back to LAUNCHOPS_ADMIN_SECRET unless they later expose their own admin API.
+
+# === Firebase (per-project, optional) ============================================
+# Each LaunchOps project maps to one Firebase service account. Use literal \n
+# sequences for the private key line breaks if you're storing in env files.
+
+FIREBASE_MODIH_PROJECT_ID=
+FIREBASE_MODIH_CLIENT_EMAIL=
+FIREBASE_MODIH_PRIVATE_KEY=
+
+FIREBASE_CLEX_PROJECT_ID=
+FIREBASE_CLEX_CLIENT_EMAIL=
+FIREBASE_CLEX_PRIVATE_KEY=
+
+FIREBASE_CLEX_AI_PROJECT_ID=
+FIREBASE_CLEX_AI_CLIENT_EMAIL=
+FIREBASE_CLEX_AI_PRIVATE_KEY=
+
+FIREBASE_DRIPED_PROJECT_ID=
+FIREBASE_DRIPED_CLIENT_EMAIL=
+FIREBASE_DRIPED_PRIVATE_KEY=
+
+FIREBASE_TRGT_PROJECT_ID=
+FIREBASE_TRGT_CLIENT_EMAIL=
+FIREBASE_TRGT_PRIVATE_KEY=
+
+FIREBASE_PORTFOLIO_PROJECT_ID=
+FIREBASE_PORTFOLIO_CLIENT_EMAIL=
+FIREBASE_PORTFOLIO_PRIVATE_KEY=
+
+# === Misc ========================================================================
+ADMIN_EMAIL=
+NEXT_PUBLIC_APP_URL=http://localhost:5173

@@ -1,0 +1,32 @@
+# =====================================================================
+# lnch.in — Cloudflare Pages config
+#
+# `pages_build_output_dir` points at the Vite build output. Pages Functions
+# live under ./functions and are deployed automatically alongside the static
+# bundle.
+#
+# Bindings below are placeholder identifiers. Run:
+#   wrangler d1 create launchops-db
+#   wrangler kv namespace create LAUNCHOPS_KV
+# and replace database_id / id with the values Wrangler prints.
+# =====================================================================
+name = "lnch-in"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "launchops-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[[kv_namespaces]]
+binding = "LAUNCHOPS_KV"
+id = "0000000000000000000000000000000000"
+
+[vars]
+LAUNCHOPS_PUBLIC_NAME = "LaunchOps"
+# Keep secrets (LAUNCHOPS_ADMIN_SECRET, GITHUB_TOKEN, CLOUDFLARE_API_TOKEN,
+# VERCEL_TOKEN, MODIH_ADMIN_SECRET, FIREBASE_*) in Pages env vars or
+# `wrangler secret put` — never in this file.

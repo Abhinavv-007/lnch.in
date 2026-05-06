@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Base.
+   ─────────────────────────────────────────────────────────────────────── */
+:root {
+  color-scheme: dark;
+  --bg: #050505;
+  --bg-soft: #0a0a0a;
+  --bg-elev: #111111;
+  --line: #1f1f1f;
+  --line-soft: #161616;
+  --text: #ededed;
+  --muted: #737373;
+  --gilt: #d9c57f;
+}
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Scrollbar — narrow, almost invisible until hovered. */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #3f3f3f; }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Reusable surfaces.
+   ─────────────────────────────────────────────────────────────────────── */
+@layer components {
+  .panel {
+    @apply rounded-2xl border border-ink-600/70 bg-ink-900/70 backdrop-blur-md shadow-panel;
+  }
+  .panel-soft {
+    @apply rounded-2xl border border-ink-600/40 bg-ink-900/40 backdrop-blur-sm;
+  }
+  .panel-glow {
+    @apply panel relative overflow-hidden;
+  }
+  .panel-glow::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      600px 200px at 0% 0%,
+      rgba(217, 197, 127, 0.12),
+      transparent 60%
+    );
+    pointer-events: none;
+  }
+  .gilt-text {
+    @apply text-gilt-300;
+  }
+  .heading-display {
+    @apply font-serif tracking-tight;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-ink-600 bg-ink-800/80 px-2.5 py-0.5 text-xs text-ink-200;
+  }
+  .pill-gilt {
+    @apply pill border-gilt-700/60 bg-gilt-900/30 text-gilt-200;
+  }
+  .pill-ok    { @apply pill border-emerald-700/60 bg-emerald-900/20 text-emerald-300; }
+  .pill-warn  { @apply pill border-amber-700/60   bg-amber-900/20   text-amber-300; }
+  .pill-err   { @apply pill border-red-700/60     bg-red-900/20     text-red-300; }
+  .pill-info  { @apply pill border-sky-700/60     bg-sky-900/20     text-sky-300; }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gilt-300 px-5 py-2.5 text-sm font-medium text-ink-950
+      transition hover:bg-gilt-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gilt-300/70;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-ink-500/80 bg-ink-800/60 px-5 py-2.5 text-sm font-medium text-ink-100
+      transition hover:border-ink-400 hover:bg-ink-700/60 active:scale-[0.98];
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-red-700/60 bg-red-900/40 px-4 py-2 text-sm font-medium text-red-200
+      transition hover:bg-red-900/60 active:scale-[0.98];
+  }
+  .input-base {
+    @apply w-full rounded-xl border border-ink-600 bg-ink-900/80 px-3.5 py-2.5 text-sm text-ink-100 placeholder-ink-300/60
+      transition focus:border-gilt-500/60 focus:outline-none focus:ring-2 focus:ring-gilt-500/30;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Background dot grid and soft radial — used as the global ops backdrop.
+   ─────────────────────────────────────────────────────────────────────── */
+.bg-stage {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1200px 600px at 50% -10%, rgba(217, 197, 127, 0.08), transparent 60%),
+    radial-gradient(rgba(217, 197, 127, 0.07) 1px, transparent 1px);
+  background-size: auto, 22px 22px;
+  background-attachment: fixed;
+}
+
+/* Subtle animated glow used on accent badges/pills. */
+.glow-pulse {
+  position: relative;
+}
+.glow-pulse::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  box-shadow: 0 0 16px -4px currentColor;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Skeleton shimmer (used while data loads). */
+.shimmer {
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.10) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
+/* Mobile touch target floor. */
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
+@media (pointer: coarse) {
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
+}
+
+/* Hide scrollbar on mobile bottom nav scroll-snap row. */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
