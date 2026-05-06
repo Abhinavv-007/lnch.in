@@ -14,8 +14,8 @@
     "deploy": "npm run build && wrangler pages deploy dist",
     "db:migrate:local": "wrangler d1 migrations apply launchops-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply launchops-db --remote",
-    "db:seed:local": "wrangler d1 execute launchops-db --local --file=migrations/seed_projects.sql",
-    "db:seed:remote": "wrangler d1 execute launchops-db --remote --file=migrations/seed_projects.sql"
+    "db:seed:local": "wrangler d1 execute launchops-db --local --file=seeds/seed_projects.sql",
+    "db:seed:remote": "wrangler d1 execute launchops-db --remote --file=seeds/seed_projects.sql"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241224.0",
+    "@eslint/js": "^9.39.4",
     "@types/node": "^22.10.5",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
@@ -42,6 +43,6 @@
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.19.1",
     "vite": "^6.0.7",
-    "wrangler": "^3.99.0"
+    "wrangler": "^4.88.0"
   }
 }

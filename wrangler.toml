@@ -18,12 +18,12 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "launchops-db"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "37662aac-d5f5-4089-92b6-09aa6ccf9ce2"
 migrations_dir = "migrations"
 
 [[kv_namespaces]]
 binding = "LAUNCHOPS_KV"
-id = "0000000000000000000000000000000000"
+id = "5657a1ac82404153bd7a6bc57c2bdec7"
 
 [vars]
 LAUNCHOPS_PUBLIC_NAME = "LaunchOps"
