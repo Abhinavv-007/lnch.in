@@ -11,7 +11,10 @@
  *   - GITHUB_TOKEN
  *   - CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID, CLOUDFLARE_ZONE_ID
  *   - VERCEL_TOKEN, VERCEL_TEAM_ID
- *   - MODIH_ADMIN_SECRET
+ *   - MODIH_ADMIN_SECRET, CLEX_ADMIN_SECRET, CLEX_AI_ADMIN_SECRET,
+ *     DRIPED_ADMIN_SECRET, TRGT_ADMIN_SECRET (one per project that ships
+ *     its own admin API; lnch.in's server-side admin proxy forwards each
+ *     to the matching upstream as `X-Admin-Secret`).
  *   - FIREBASE_<SLUG>_PROJECT_ID, FIREBASE_<SLUG>_CLIENT_EMAIL, FIREBASE_<SLUG>_PRIVATE_KEY
  *     where SLUG ∈ {MODIH, CLEX, CLEX_AI, DRIPED, TRGT, PORTFOLIO}
  *     (private key may have literal "\n" sequences — they're decoded on use.)
@@ -35,6 +38,10 @@ export interface Env {
   VERCEL_TEAM_ID?: string;
 
   MODIH_ADMIN_SECRET?: string;
+  CLEX_ADMIN_SECRET?: string;
+  CLEX_AI_ADMIN_SECRET?: string;
+  DRIPED_ADMIN_SECRET?: string;
+  TRGT_ADMIN_SECRET?: string;
 
   FIREBASE_MODIH_PROJECT_ID?: string;
   FIREBASE_MODIH_CLIENT_EMAIL?: string;
@@ -43,6 +50,10 @@ export interface Env {
   FIREBASE_CLEX_PROJECT_ID?: string;
   FIREBASE_CLEX_CLIENT_EMAIL?: string;
   FIREBASE_CLEX_PRIVATE_KEY?: string;
+
+  FIREBASE_CLEX_AI_PROJECT_ID?: string;
+  FIREBASE_CLEX_AI_CLIENT_EMAIL?: string;
+  FIREBASE_CLEX_AI_PRIVATE_KEY?: string;
 
   FIREBASE_DRIPED_PROJECT_ID?: string;
   FIREBASE_DRIPED_CLIENT_EMAIL?: string;
