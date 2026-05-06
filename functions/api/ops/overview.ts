@@ -38,9 +38,9 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
   const cfDeploysPromise = cf.isConfigured()
     ? cf.listPagesProjects().then((projects) =>
         Promise.allSettled(projects.slice(0, 8).map((p) => cf.listPagesDeployments(p.name).then((deps) => deps.map((d) => ({ ...d, project: p.name }))))),
-      )
+      ).catch(() => [])
     : Promise.resolve([]);
-  const vcDeploysPromise = vc.isConfigured() ? vc.listRecentDeployments(20) : Promise.resolve([]);
+  const vcDeploysPromise = vc.isConfigured() ? vc.listRecentDeployments(20).catch(() => []) : Promise.resolve([]);
 
   const [ghCommits, ghPRs, ghIssues, ghFailing, cfDeploys, vcDeploys, ghTokenHealth, cfTokenHealth, vcTokenHealth] = await Promise.all([
     ghPromise,
@@ -50,8 +50,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env }) => {
     cfDeploysPromise,
     vcDeploysPromise,
     gh.isConfigured() ? gh.tokenScopeHealth() : Promise.resolve({ ok: false }),
-    cf.isConfigured() ? cf.tokenHealth() : Promise.resolve({ ok: false }),
-    vc.isConfigured() ? vc.tokenHealth() : Promise.resolve({ ok: false }),
+    cf.isConfigured() ? cf.tokenHealth().catch((error) => ({ ok: false, reason: error instanceof Error ? error.message : "Cloudflare health check failed" })) : Promise.resolve({ ok: false }),
+    vc.isConfigured() ? vc.tokenHealth().catch((error) => ({ ok: false, reason: error instanceof Error ? error.message : "Vercel health check failed" })) : Promise.resolve({ ok: false }),
   ]);
 
   // Recent commits flatten + sort.
