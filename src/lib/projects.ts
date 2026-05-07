@@ -139,19 +139,71 @@ export const PROJECTS_BY_SLUG: Record<string, Project> = Object.fromEntries(
   PROJECTS.map((p) => [p.slug, p]),
 );
 
+/**
+ * Per-project detail tab list.
+ *
+ * Each entry maps to a `<ProjectAdminTab>` Section in `routes/ops/ProjectDetail.tsx`.
+ * The 13 tabs were chosen to expose every side of a project the operator
+ * cares about — health, who's using the project, what keys are out there,
+ * what's been audited, what's been deployed, what changed in the changelog,
+ * security posture, open work, scratch notes, analytics, and the project
+ * registry/settings.
+ *
+ * "github" is intentionally folded into Overview (latest commit + open PR/
+ * issue/CI counters) and Changelog (releases) instead of being its own tab,
+ * to keep the navigation compact and admin-shaped rather than tool-shaped.
+ */
 export const PROJECT_DETAIL_SECTIONS = [
   "overview",
-  "admin",
-  "github",
+  "health",
+  "users",
+  "api-consumers",
+  "api-keys",
+  "audit",
   "deployments",
-  "apis",
-  "logs",
-  "analytics",
-  "notes",
-  "tasks",
   "changelog",
   "security",
+  "tasks",
+  "notes",
+  "analytics",
   "settings",
 ] as const;
 
 export type ProjectDetailSection = (typeof PROJECT_DETAIL_SECTIONS)[number];
+
+/** Display label for a tab (URL slug → human-friendly). */
+export const PROJECT_DETAIL_LABELS: Record<ProjectDetailSection, string> = {
+  overview: "overview",
+  health: "health",
+  users: "users",
+  "api-consumers": "API consumers",
+  "api-keys": "API keys",
+  audit: "audit",
+  deployments: "deployments",
+  changelog: "changelog",
+  security: "security",
+  tasks: "tasks",
+  notes: "notes",
+  analytics: "analytics",
+  settings: "settings",
+};
+
+/**
+ * Topics that the per-project admin proxy can fetch via
+ * `GET /api/ops/projects/:slug/admin/:topic`. Each topic maps 1:1 to an
+ * upstream admin endpoint at `${adminBaseUrl}/${topic}`.
+ *
+ * Keep this list and the server-side allowlist in
+ * `functions/api/ops/projects/[slug]/admin/[topic].ts` in sync.
+ */
+export const PROJECT_ADMIN_TOPICS = [
+  "users",
+  "api-consumers",
+  "api-keys",
+  "audit",
+  "security",
+  "analytics",
+  "health",
+  "settings",
+] as const;
+export type ProjectAdminTopic = (typeof PROJECT_ADMIN_TOPICS)[number];
