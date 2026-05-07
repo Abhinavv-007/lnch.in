@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import PageHeader from "@/components/ops/PageHeader";
 import SectionTitle from "@/components/ops/SectionTitle";
 import { api } from "@/lib/api";
@@ -9,18 +10,30 @@ type Task = { id: number; title: string; body: string | null; project_slug: stri
 const STATUS = ["open", "blocked", "shipped", "archived"] as const;
 
 export default function TasksCenter() {
+  const [params, setParams] = useSearchParams();
+  // Project filter is URL-driven so deep links from /ops/projects/:slug/tasks → /ops/tasks?project_slug=:slug carry over.
+  const projectFilter = params.get("project_slug") ?? "";
   const [tasks, setTasks] = useState<Task[] | null>(null);
-  const [draft, setDraft] = useState({ title: "", body: "", project_slug: "", priority: 2, tags: "" });
+  const [draft, setDraft] = useState({ title: "", body: "", project_slug: projectFilter, priority: 2, tags: "" });
   const [filter, setFilter] = useState<"" | typeof STATUS[number]>("");
 
   async function refresh() {
-    const r = await api.get<{ tasks: Task[] }>(`/api/ops/tasks${filter ? `?status=${filter}` : ""}`);
+    const qs = new URLSearchParams();
+    if (filter) qs.set("status", filter);
+    if (projectFilter) qs.set("project", projectFilter);
+    const r = await api.get<{ tasks: Task[] }>(`/api/ops/tasks${qs.size ? `?${qs.toString()}` : ""}`);
     setTasks(r.tasks);
   }
   useEffect(() => {
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter]);
+  }, [filter, projectFilter]);
+
+  function setProject(next: string) {
+    if (next) params.set("project_slug", next);
+    else params.delete("project_slug");
+    setParams(params, { replace: true });
+  }
 
   async function save() {
     if (!draft.title) return;
@@ -62,10 +75,16 @@ export default function TasksCenter() {
       </div>
       <div className="panel p-5">
         <SectionTitle hint={`${tasks?.length ?? 0} shown`} action={
-          <select className="input-base" value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
-            <option value="">All</option>
-            {STATUS.map((s) => (<option key={s} value={s}>{s}</option>))}
-          </select>
+          <div className="flex items-center gap-2">
+            <select className="input-base" value={projectFilter} onChange={(e) => setProject(e.target.value)}>
+              <option value="">All projects</option>
+              {PROJECTS.map((p) => (<option key={p.slug} value={p.slug}>{p.name}</option>))}
+            </select>
+            <select className="input-base" value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
+              <option value="">All</option>
+              {STATUS.map((s) => (<option key={s} value={s}>{s}</option>))}
+            </select>
+          </div>
         }>Tasks</SectionTitle>
         <ul className="divide-rule text-sm">
           {(tasks ?? []).map((t) => (
