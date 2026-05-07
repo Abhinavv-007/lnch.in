@@ -277,3 +277,117 @@ button, a {
 /* Hide scrollbar on mobile bottom nav scroll-snap row. */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { scrollbar-width: none; }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Poster-style modules (scalloped border, dotted paper grid, mono labels).
+
+   These are layered on top of the existing paper/dark palette so the public
+   landing reads like the printed reference posters: scalloped tickets,
+   serif italic headlines, gilt accents, and a denser dotted paper grid.
+   ─────────────────────────────────────────────────────────────────────── */
+.bg-paper-grid {
+  background-color: var(--bg);
+  background-image: radial-gradient(rgba(217, 197, 127, 0.18) 1px, transparent 1.2px);
+  background-size: 14px 14px;
+  background-attachment: fixed;
+}
+:root[data-theme="light"] .bg-paper-grid {
+  background-image: radial-gradient(rgba(138, 106, 45, 0.22) 1px, transparent 1.2px);
+}
+
+/*
+ * Scalloped poster border — a card with a notched top/bottom edge made from
+ * radial-gradient masks. Pure CSS so it works without inline SVG.
+ */
+.poster-card {
+  --poster-bg: var(--bg-elev);
+  --poster-line: var(--line);
+  --poster-scallop: 14px;
+  position: relative;
+  background: var(--poster-bg);
+  border-left: 1px solid var(--poster-line);
+  border-right: 1px solid var(--poster-line);
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+}
+.poster-card::before,
+.poster-card::after {
+  content: "";
+  display: block;
+  height: var(--poster-scallop);
+  background-color: var(--poster-bg);
+  background-image:
+    radial-gradient(circle at var(--poster-scallop) 0,
+      transparent var(--poster-scallop), var(--poster-bg) calc(var(--poster-scallop) + 1px));
+  background-size: calc(var(--poster-scallop) * 2) var(--poster-scallop);
+  background-repeat: repeat-x;
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+.poster-card::before {
+  top: calc(-1 * var(--poster-scallop));
+  background-image:
+    radial-gradient(circle at var(--poster-scallop) var(--poster-scallop),
+      transparent var(--poster-scallop), var(--poster-bg) calc(var(--poster-scallop) + 1px));
+  border-top: 1px solid var(--poster-line);
+  -webkit-mask: radial-gradient(circle var(--poster-scallop) at 50% 100%, transparent 99%, #000 100%) repeat-x;
+  -webkit-mask-size: calc(var(--poster-scallop) * 2) 100%;
+          mask: radial-gradient(circle var(--poster-scallop) at 50% 100%, transparent 99%, #000 100%) repeat-x;
+          mask-size: calc(var(--poster-scallop) * 2) 100%;
+}
+.poster-card::after {
+  bottom: calc(-1 * var(--poster-scallop));
+  border-bottom: 1px solid var(--poster-line);
+  -webkit-mask: radial-gradient(circle var(--poster-scallop) at 50% 0%, transparent 99%, #000 100%) repeat-x;
+  -webkit-mask-size: calc(var(--poster-scallop) * 2) 100%;
+          mask: radial-gradient(circle var(--poster-scallop) at 50% 0%, transparent 99%, #000 100%) repeat-x;
+          mask-size: calc(var(--poster-scallop) * 2) 100%;
+}
+
+.poster-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-soft);
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+.poster-divider::before,
+.poster-divider::after {
+  content: "";
+  flex: 1 1 auto;
+  border-top: 1px solid var(--line);
+}
+
+.poster-stamp {
+  border: 1px solid var(--accent);
+  border-radius: 9999px;
+  padding: 0.35rem 0.85rem;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+/*
+ * View Transitions: zero out the default crossfade so the circular reveal
+ * is the only visible animation on theme switch.
+ */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 0;
+}
+::view-transition-new(root) {
+  z-index: 1;
+}

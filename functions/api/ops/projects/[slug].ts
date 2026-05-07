@@ -10,6 +10,7 @@ import { VercelAdapter } from "../../../_adapters/vercel";
 import { CloudflareAdapter } from "../../../_adapters/cloudflare";
 import * as firebase from "../../../_adapters/firebase";
 import { ModihAdapter } from "../../../_adapters/modih";
+import { ProjectAdminAdapter } from "../../../_adapters/projectAdmin";
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env, params }) => {
   const g = await gate(request, env);
@@ -103,27 +104,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   };
   if (slug === "modih") {
     admin = await new ModihAdapter(env).overview();
-  } else if (slug === "clex") {
-    admin.plannedEndpoints = [
-      "GET https://clex.in/api/admin/workspace",
-      "GET https://clex.in/api/admin/transfers",
-      "GET https://clex.in/api/admin/signaling/health",
-      "GET https://clex.in/api/admin/vault/secrets/count",
-    ];
-  } else if (slug === "clex-ai") {
-    admin.plannedEndpoints = [
-      "GET https://api.clex.in/v1/admin/usage",
-      "GET https://api.clex.in/v1/admin/keys",
-      "GET https://api.clex.in/v1/admin/models",
-    ];
-  } else if (slug === "driped") {
-    admin.plannedEndpoints = [
-      "GET https://driped.in/api/admin/scans/summary",
-      "GET https://driped.in/api/admin/users/summary",
-      "GET https://driped.in/api/admin/parsers/health",
-    ];
-  } else if (slug === "trgt") {
-    admin.plannedEndpoints = ["GET https://trgt.in/api/admin/content/health", "GET https://trgt.in/api/admin/seo"];
+  } else if (project.adminBaseUrl) {
+    admin = await new ProjectAdminAdapter(env, project).overview();
   } else if (slug === "portfolio") {
     admin.plannedEndpoints = ["GET https://abhnv.in/api/admin/content/health", "GET https://abhnv.in/api/admin/seo"];
   }
