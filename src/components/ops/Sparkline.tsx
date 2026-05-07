@@ -49,7 +49,7 @@ export default function Sparkline({
       viewBox={`0 0 ${width} ${height}`}
       width={width}
       height={height}
-      className={cn("text-gilt-300", className)}
+      className={cn("text-accent", className)}
     >
       {areaPath ? <path d={areaPath} fill={fill} fillOpacity={0.12} /> : null}
       <polyline

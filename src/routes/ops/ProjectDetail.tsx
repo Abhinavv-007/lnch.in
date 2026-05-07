@@ -54,7 +54,7 @@ export default function ProjectDetail() {
   }, [project]);
 
   if (!project) {
-    return <p className="text-sm text-red-300">Unknown project.</p>;
+    return <p className="text-sm signal-err">Unknown project.</p>;
   }
 
   return (
@@ -91,8 +91,8 @@ export default function ProjectDetail() {
               cn(
                 "shrink-0 rounded-full border px-3 py-1.5 transition",
                 isActive || (s === "overview" && active === "overview")
-                  ? "border-gilt-700/60 bg-gilt-900/30 text-gilt-200 shadow-gilt-sm"
-                  : "border-ink-600 bg-ink-900/40 text-ink-200 hover:text-ink-100",
+                  ? "border-accent bg-accent-soft text-accent shadow-gilt-sm poster-active-edge"
+                  : "border-rule bg-paper-elev text-fg-soft hover:text-fg hover:border-accent",
               )
             }
             end
@@ -103,7 +103,7 @@ export default function ProjectDetail() {
       </nav>
 
       {error ? (
-        <div className="panel p-5 text-sm text-red-300">Couldn't load: {error}</div>
+        <div className="panel p-5 text-sm signal-err">Couldn't load: {error}</div>
       ) : null}
 
       {active === "overview" && <OverviewSection project={project} detail={detail} />}
@@ -131,7 +131,7 @@ function OverviewSection({
 }) {
   return (
     <div className="space-y-4">
-      <section className="grid gap-3 md:grid-cols-3">
+      <section className="poster-stagger grid gap-3 md:grid-cols-3">
         <StatCard
           label="API status"
           value={detail ? (detail.apis.every((a) => a.ok) && detail.apis.length ? "Healthy" : detail.apis.some((a) => a.ok) ? "Degraded" : detail.apis.length === 0 ? "—" : "Down") : "…"}
@@ -162,16 +162,16 @@ function OverviewSection({
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-xs text-ink-300">
+          <p className="mt-3 text-xs text-fg-soft">
             Mobile apps appear under their parent project — they're not first-class LaunchOps targets.
           </p>
         </div>
       ) : null}
 
       <Link to={`/ops/projects/${project.slug}/admin`} className="block">
-        <div className="panel p-5 hover:border-gilt-700/60">
+        <div className="panel p-5 hover:border-accent">
           <SectionTitle>Admin module</SectionTitle>
-          <p className="text-sm text-ink-200">
+          <p className="text-sm text-fg-soft">
             {detail?.admin.available
               ? "Admin endpoints connected. Open the Admin tab for controls."
               : "Project-side admin endpoints aren't shipped yet for this project."}
@@ -201,9 +201,9 @@ function AdminSection({
         />
         <div className="panel p-5">
           <SectionTitle hint="planned · not available yet">Endpoints LaunchOps will call</SectionTitle>
-          <ul className="space-y-1 text-xs font-mono text-ink-200">
+          <ul className="space-y-1 text-xs font-mono text-fg-soft">
             {detail.admin.plannedEndpoints.map((e) => (
-              <li key={e} className="rounded-md border border-ink-600/40 bg-ink-900/40 px-2.5 py-1.5">
+              <li key={e} className="rounded-md border border-rule bg-paper-elev px-2.5 py-1.5">
                 {e}
               </li>
             ))}
@@ -241,7 +241,7 @@ function GithubSection({ detail }: { detail: Detail | null }) {
   const g = detail.github;
   return (
     <div className="space-y-4">
-      <section className="grid gap-3 md:grid-cols-3">
+      <section className="poster-stagger grid gap-3 md:grid-cols-3">
         <StatCard label="Open PRs" value={g.openPRs} tone="info" />
         <StatCard label="Open issues" value={g.openIssues} tone={g.openIssues > 5 ? "warn" : "neutral"} />
         <StatCard label="Failing workflows" value={g.failingWorkflows} tone={g.failingWorkflows ? "err" : "ok"} />
@@ -249,12 +249,12 @@ function GithubSection({ detail }: { detail: Detail | null }) {
 
       <div className="panel p-5">
         <SectionTitle hint={`${g.commits.length} latest`}>Commits</SectionTitle>
-        <ul className="divide-y divide-ink-600/40">
+        <ul className="divide-rule">
           {g.commits.map((c) => (
             <li key={c.sha} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 py-2 text-sm">
-              <span className="font-mono text-xs text-gilt-300">{shortHash(c.sha)}</span>
+              <span className="font-mono text-xs text-accent">{shortHash(c.sha)}</span>
               <span className="truncate">{c.message}</span>
-              <span className="text-xs text-ink-300">
+              <span className="text-xs text-fg-soft">
                 {c.author} · {timeAgo(c.ts)}
               </span>
             </li>
@@ -275,12 +275,12 @@ function GithubSection({ detail }: { detail: Detail | null }) {
           <SectionTitle>Releases</SectionTitle>
           <ul className="space-y-1 text-sm">
             {g.releases.length === 0 ? (
-              <li className="text-ink-300">No releases.</li>
+              <li className="text-fg-soft">No releases.</li>
             ) : (
               g.releases.map((r) => (
-                <li key={r.tag} className="flex justify-between border-b border-ink-600/30 py-1.5">
+                <li key={r.tag} className="flex justify-between border-b border-rule-soft py-1.5">
                   <span>{r.name}</span>
-                  <span className="text-xs text-ink-300">
+                  <span className="text-xs text-fg-soft">
                     {r.tag} · {timeAgo(r.ts)}
                   </span>
                 </li>
@@ -309,9 +309,9 @@ function DeploymentsSection({ detail }: { detail: Detail | null }) {
     <div className="panel p-5">
       <SectionTitle hint={`${d.provider}`}>Recent deployments</SectionTitle>
       {d.recent.length === 0 ? (
-        <p className="text-sm text-ink-300">No deployments in the last cycle.</p>
+        <p className="text-sm text-fg-soft">No deployments in the last cycle.</p>
       ) : (
-        <ul className="divide-y divide-ink-600/40 text-sm">
+        <ul className="divide-rule text-sm">
           {d.recent.map((r) => (
             <li key={r.ts} className="flex items-center justify-between py-2">
               <span className="flex items-center gap-2">
@@ -326,9 +326,9 @@ function DeploymentsSection({ detail }: { detail: Detail | null }) {
                 >
                   {r.state}
                 </span>
-                <span className="font-mono text-xs text-ink-300">{shortHash(r.sha)}</span>
+                <span className="font-mono text-xs text-fg-soft">{shortHash(r.sha)}</span>
               </span>
-              <span className="text-xs text-ink-300">{timeAgo(r.ts)}</span>
+              <span className="text-xs text-fg-soft">{timeAgo(r.ts)}</span>
             </li>
           ))}
         </ul>
@@ -345,12 +345,12 @@ function ApisSection({ detail }: { detail: Detail | null }) {
   return (
     <div className="panel p-5">
       <SectionTitle>Probes</SectionTitle>
-      <ul className="divide-y divide-ink-600/40 text-sm">
+      <ul className="divide-rule text-sm">
         {detail.apis.map((a) => (
           <li key={a.target} className="flex items-center justify-between py-2">
             <span className="truncate font-mono text-xs">{a.target}</span>
             <span className="flex items-center gap-3 text-xs">
-              <span className="text-ink-300">{a.latencyMs ?? "—"}ms · {a.status ?? "—"}</span>
+              <span className="text-fg-soft">{a.latencyMs ?? "—"}ms · {a.status ?? "—"}</span>
               <HealthDot state={a.ok ? "ok" : "err"} label={a.ok ? "ok" : "down"} />
             </span>
           </li>
@@ -388,7 +388,7 @@ function Placeholder({ title, hint }: { title: string; hint: string }) {
   return (
     <div className="panel p-6">
       <SectionTitle>{title}</SectionTitle>
-      <p className="text-sm text-ink-300">{hint}</p>
+      <p className="text-sm text-fg-soft">{hint}</p>
     </div>
   );
 }

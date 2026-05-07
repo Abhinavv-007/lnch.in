@@ -26,7 +26,7 @@ export default function DeploymentsCenter() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="deployments" title="Deployment center" description="Cloudflare Pages and Vercel deploys, side by side." />
-      <section className="grid gap-3 md:grid-cols-3">
+      <section className="poster-stagger grid gap-3 md:grid-cols-3">
         <StatCard label="Last 24h" value={data?.totals.last24h ?? "…"} tone="gilt" />
         <StatCard label="Failed" value={data?.totals.failed24h ?? "…"} tone={data?.totals.failed24h ? "warn" : "ok"} />
         <StatCard label="Sources" value={`${data?.cloudflare.configured ? "CF" : ""} ${data?.vercel.configured ? "Vercel" : ""}`.trim() || "—"} tone="neutral" />
@@ -70,9 +70,9 @@ function ProviderBlock({
   return (
     <div className="panel p-5">
       <SectionTitle hint={configured ? `${deployments.length} recent` : "loading"}>{title}</SectionTitle>
-      <ul className="divide-y divide-ink-600/40 text-sm">
+      <ul className="divide-rule text-sm">
         {deployments.length === 0 ? (
-          <li className="py-2 text-ink-300">No deployments to show.</li>
+          <li className="py-2 text-fg-soft">No deployments to show.</li>
         ) : (
           deployments.map((d, i) => (
             <li key={i} className="flex items-center justify-between gap-3 py-2">
@@ -89,9 +89,9 @@ function ProviderBlock({
                   {d.state}
                 </span>
                 <span className="truncate">{d.project}</span>
-                <span className="font-mono text-xs text-ink-300">{shortHash(d.sha)}</span>
+                <span className="font-mono text-xs text-fg-soft">{shortHash(d.sha)}</span>
               </span>
-              <span className="text-xs text-ink-300">{timeAgo(d.ts)}</span>
+              <span className="text-xs text-fg-soft">{timeAgo(d.ts)}</span>
             </li>
           ))
         )}

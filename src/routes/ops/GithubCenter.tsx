@@ -33,7 +33,7 @@ export default function GithubCenter() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="github center" title="GitHub" description="Live activity from across your repos." />
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <section className="poster-stagger grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard icon={<Github className="h-3.5 w-3.5" />} label="Recent commits" value={data?.totals.commits ?? "…"} tone="gilt" />
         <StatCard label="Open PRs" value={data?.totals.openPRs ?? "…"} tone="info" />
         <StatCard label="Open issues" value={data?.totals.openIssues ?? "…"} tone="neutral" />
@@ -42,37 +42,37 @@ export default function GithubCenter() {
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="panel p-5">
           <SectionTitle>Latest commits</SectionTitle>
-          <ul className="divide-y divide-ink-600/40">
+          <ul className="divide-rule">
             {(data?.recentCommits ?? []).map((c) => (
               <li key={`${c.repo}-${c.sha}`} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 py-2 text-sm">
-                <span className="font-mono text-xs text-gilt-300">{shortHash(c.sha)}</span>
+                <span className="font-mono text-xs text-accent">{shortHash(c.sha)}</span>
                 <div className="min-w-0">
                   <p className="truncate">{c.message}</p>
-                  <p className="text-xs text-ink-300">{c.repo}</p>
+                  <p className="text-xs text-fg-soft">{c.repo}</p>
                 </div>
-                <span className="text-xs text-ink-300">{timeAgo(c.ts)}</span>
+                <span className="text-xs text-fg-soft">{timeAgo(c.ts)}</span>
               </li>
             ))}
           </ul>
         </div>
         <div className="panel p-5">
           <SectionTitle>Open PRs</SectionTitle>
-          <ul className="divide-y divide-ink-600/40">
+          <ul className="divide-rule">
             {(data?.openPRs ?? []).map((p) => (
               <li key={`${p.repo}-${p.number}`} className="flex items-center justify-between gap-3 py-2 text-sm">
                 <span className="truncate">
-                  <span className="text-ink-300">#{p.number}</span> {p.title}
+                  <span className="text-fg-soft">#{p.number}</span> {p.title}
                 </span>
-                <span className="text-xs text-ink-300">{p.repo} · {timeAgo(p.ts)}</span>
+                <span className="text-xs text-fg-soft">{p.repo} · {timeAgo(p.ts)}</span>
               </li>
             ))}
           </ul>
         </div>
         <div className="panel p-5">
           <SectionTitle>Failing workflows</SectionTitle>
-          <ul className="divide-y divide-ink-600/40">
+          <ul className="divide-rule">
             {(data?.failingWorkflows ?? []).length === 0 ? (
-              <li className="py-2 text-sm text-ink-300">No failing workflows.</li>
+              <li className="py-2 text-sm text-fg-soft">No failing workflows.</li>
             ) : (
               data!.failingWorkflows.map((w, i) => (
                 <li key={i} className="flex items-center justify-between gap-3 py-2 text-sm">
@@ -85,14 +85,14 @@ export default function GithubCenter() {
         </div>
         <div className="panel p-5">
           <SectionTitle>Releases</SectionTitle>
-          <ul className="divide-y divide-ink-600/40">
+          <ul className="divide-rule">
             {(data?.recentReleases ?? []).length === 0 ? (
-              <li className="py-2 text-sm text-ink-300">No releases.</li>
+              <li className="py-2 text-sm text-fg-soft">No releases.</li>
             ) : (
               data!.recentReleases.map((r) => (
                 <li key={`${r.repo}-${r.tag}`} className="flex items-center justify-between gap-3 py-2 text-sm">
                   <span className="truncate">{r.name}</span>
-                  <span className="text-xs text-ink-300">{r.tag} · {timeAgo(r.ts)}</span>
+                  <span className="text-xs text-fg-soft">{r.tag} · {timeAgo(r.ts)}</span>
                 </li>
               ))
             )}

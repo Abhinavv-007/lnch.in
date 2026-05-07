@@ -35,7 +35,7 @@ export type Project = {
   site?: string;
   repo: string; // owner/name
   blurb: string;
-  /** Brand accent — Tailwind class, e.g. text-gilt-300, text-emerald-300. */
+  /** Brand accent — Tailwind class, e.g. text-accent, text-emerald-300. */
   accent: string;
   mobileApps?: { platform: "android" | "ios"; label: string }[];
   /** Endpoints the API center can ping for health. */
@@ -90,7 +90,7 @@ export const PROJECTS: Project[] = [
     repo: "Abhinavv-007/clex-ai",
     blurb:
       "OpenAI-compatible gateway. 130+ models, smart routing, streaming, per-key analytics.",
-    accent: "text-gilt-300",
+    accent: "text-accent",
     health: [
       "https://api.ai.clex.in/api/health",
       "https://api.clex.in/api/health",

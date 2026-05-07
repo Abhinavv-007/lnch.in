@@ -47,7 +47,7 @@ export default function ChangelogCenter() {
           <SectionTitle action={<button onClick={generate} className="btn-ghost">Generate from commits</button>}>
             New draft
           </SectionTitle>
-          <label className="text-xs uppercase tracking-[0.22em] text-ink-300">Project</label>
+          <label className="text-xs uppercase tracking-[0.22em] text-fg-soft">Project</label>
           <select className="input-base mt-1 mb-2" value={project} onChange={(e) => setProject(e.target.value)}>
             {PROJECTS.map((p) => (
               <option key={p.slug} value={p.slug}>{p.name}</option>
@@ -62,12 +62,12 @@ export default function ChangelogCenter() {
         </div>
         <div className="panel p-5">
           <SectionTitle>Recent commits ({project})</SectionTitle>
-          <ul className="divide-y divide-ink-600/40 text-sm max-h-[420px] overflow-auto">
+          <ul className="divide-rule text-sm max-h-[420px] overflow-auto">
             {commits.map((c) => (
               <li key={c.sha} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 py-2">
-                <span className="font-mono text-xs text-gilt-300">{shortHash(c.sha)}</span>
+                <span className="font-mono text-xs text-accent">{shortHash(c.sha)}</span>
                 <span className="truncate">{c.message.split("\n")[0]}</span>
-                <span className="text-xs text-ink-300">{timeAgo(c.ts)}</span>
+                <span className="text-xs text-fg-soft">{timeAgo(c.ts)}</span>
               </li>
             ))}
           </ul>
@@ -75,13 +75,13 @@ export default function ChangelogCenter() {
       </div>
       <div className="panel p-5">
         <SectionTitle hint={`${drafts?.length ?? 0} total`}>Drafts & releases</SectionTitle>
-        <ul className="divide-y divide-ink-600/40 text-sm">
+        <ul className="divide-rule text-sm">
           {(drafts ?? []).map((d) => (
             <li key={d.id} className="flex items-center justify-between gap-3 py-2">
               <span className="min-w-0">
                 <span className={d.status === "published" ? "pill-ok" : "pill-warn"}>{d.status}</span>{" "}
-                <span className="text-ink-100">{d.title}</span>{" "}
-                <span className="text-xs text-ink-300">{d.project_slug} · {timeAgo(d.updated_at)}</span>
+                <span className="text-fg">{d.title}</span>{" "}
+                <span className="text-xs text-fg-soft">{d.project_slug} · {timeAgo(d.updated_at)}</span>
               </span>
               {d.status === "draft" ? (
                 <button onClick={() => markPublished(d.id)} className="btn-ghost text-xs">Publish</button>

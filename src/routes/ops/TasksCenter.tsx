@@ -67,16 +67,16 @@ export default function TasksCenter() {
             {STATUS.map((s) => (<option key={s} value={s}>{s}</option>))}
           </select>
         }>Tasks</SectionTitle>
-        <ul className="divide-y divide-ink-600/40 text-sm">
+        <ul className="divide-rule text-sm">
           {(tasks ?? []).map((t) => (
             <li key={t.id} className="flex items-start justify-between gap-3 py-2">
               <div className="min-w-0">
-                <p className="font-medium text-ink-100">
+                <p className="font-medium text-fg">
                   <span className={t.priority === 1 ? "pill-err" : t.priority === 2 ? "pill-warn" : "pill"}>P{t.priority}</span>{" "}
                   <span className={t.status === "shipped" ? "pill-ok" : t.status === "blocked" ? "pill-err" : "pill-info"}>{t.status}</span>{" "}
                   {t.title}
                 </p>
-                <p className="text-[11px] text-ink-300">{t.project_slug ?? "global"} · {timeAgo(t.updated_at)}</p>
+                <p className="text-[11px] text-fg-soft">{t.project_slug ?? "global"} · {timeAgo(t.updated_at)}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 {t.status !== "shipped" ? (
