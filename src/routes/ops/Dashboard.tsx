@@ -30,6 +30,7 @@ import StatCard from "@/components/ops/StatCard";
 import SectionTitle from "@/components/ops/SectionTitle";
 import HealthDot, { type HealthState } from "@/components/ops/HealthDot";
 import Sparkline from "@/components/ops/Sparkline";
+import DotPulse from "@/components/common/DotPulse";
 import { PROJECTS } from "@/lib/projects";
 import { api } from "@/lib/api";
 import { timeAgo, shortHash } from "@/lib/format";
@@ -119,7 +120,7 @@ export default function Dashboard() {
           status={
             data
               ? `${data.healthCounts.ok} healthy · ${data.healthCounts.warn} warning · ${data.healthCounts.err} down`
-              : "Loading…"
+              : <DotPulse />
           }
           href="/ops/projects"
         />
@@ -142,7 +143,7 @@ export default function Dashboard() {
               ? data.totalsLastDay.failedDeployments
                 ? `${data.totalsLastDay.failedDeployments} failed in last 24h`
                 : "All deployments succeeded"
-              : "Loading…"
+              : <DotPulse />
           }
           href="/ops/deployments"
         />
@@ -169,7 +170,7 @@ export default function Dashboard() {
                   ? `${data.failingWorkflows} failing workflows`
                   : "Workflows clean"
                 : "Awaiting GITHUB_TOKEN"
-              : "Loading…"
+              : <DotPulse />
           }
           href="/ops/github"
         />
@@ -193,7 +194,7 @@ export default function Dashboard() {
                   ? "Account healthy"
                   : data.integrations.cloudflare.reason ?? "Degraded"
                 : "Not configured"
-              : "Loading…"
+              : <DotPulse />
           }
           href="/ops/cloudflare"
         />
@@ -217,7 +218,7 @@ export default function Dashboard() {
                   ? "Account healthy"
                   : data.integrations.vercel.reason ?? "Degraded"
                 : "Not configured"
-              : "Loading…"
+              : <DotPulse />
           }
           href="/ops/vercel"
         />
@@ -233,7 +234,7 @@ export default function Dashboard() {
               ? data.integrations.firebase.configured
                 ? "Available"
                 : "Not configured"
-              : "Loading…"
+              : <DotPulse />
           }
           href="/ops/settings"
         />
@@ -266,7 +267,7 @@ export default function Dashboard() {
               ? data.apiHealth.length === 0
                 ? "No probes registered"
                 : "Probes ran in last cycle"
-              : "Loading…"
+              : <DotPulse />
           }
           href="/ops/apis"
         />

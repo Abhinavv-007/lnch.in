@@ -27,8 +27,8 @@ export type StatCardProps = {
   value: ReactNode;
   hint?: ReactNode;
   tone?: Tone;
-  /** Bottom-aligned status string + dot (e.g., "All systems operational"). */
-  status?: string;
+  /** Bottom-aligned status content + dot (e.g., "All systems operational"). */
+  status?: ReactNode;
   className?: string;
   href?: string;
   onClick?: () => void;

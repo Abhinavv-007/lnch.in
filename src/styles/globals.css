@@ -882,6 +882,112 @@ button, a {
 ::view-transition-old(root) { z-index: 0; }
 ::view-transition-new(root) { z-index: 1; }
 
+/* ──────────────────────────────────────────────────────────────────────────
+   Cursor-following radial highlight.
+
+   <CursorGlow /> writes the pointer position to `--cursor-x` / `--cursor-y`
+   on <html>. The fixed-position overlay reads those vars and renders a
+   subtle additive radial gradient via `mix-blend-mode: plus-lighter` so it
+   brightens the dotted paper grid near the cursor without occluding text.
+   ─────────────────────────────────────────────────────────────────────── */
+:root {
+  --cursor-x: 50vw;
+  --cursor-y: 50vh;
+  --cursor-glow: rgba(217, 197, 127, 0.10);
+}
+:root[data-theme="light"] {
+  --cursor-glow: rgba(138, 106, 45, 0.06);
+}
+.cursor-glow {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(
+    340px circle at var(--cursor-x) var(--cursor-y),
+    var(--cursor-glow),
+    transparent 70%
+  );
+  mix-blend-mode: plus-lighter;
+}
+/* Make sure interactive content stacks above the glow on every page. */
+.poster-card,
+header,
+main > section,
+main > div,
+.bg-paper-grid > * { position: relative; z-index: 1; }
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Loading dot pulse — three pulsing mono bullets used in place of static
+   "Loading…" strings. Each bullet receives an inline `animation-delay` for
+   the staggered cascade.
+   ─────────────────────────────────────────────────────────────────────── */
+@keyframes dot-pulse {
+  0%, 100% { opacity: 0.25; transform: translateY(0); }
+  50%      { opacity: 0.95; transform: translateY(-1px); }
+}
+.dot-pulse__bullet {
+  display: inline-block;
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  color: var(--text-soft);
+  animation: dot-pulse 1.2s ease-in-out infinite;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Heatmap (RPS by day × hour).
+
+   Five tier colours (empty / 10 / 100 / 1K / 10K+) read from CSS vars so
+   they retone for light & dark mode. Cells animate scale + brightness on
+   hover (suppressed under prefers-reduced-motion).
+   ─────────────────────────────────────────────────────────────────────── */
+:root {
+  --heatmap-empty:  rgba(217, 197, 127, 0.10);
+  --heatmap-tier-1: rgba(168, 197, 110, 0.50);
+  --heatmap-tier-2: rgba(245, 215, 121, 0.62);
+  --heatmap-tier-3: rgba(243, 165, 95, 0.72);
+  --heatmap-tier-4: rgba(231, 109, 95, 0.85);
+}
+:root[data-theme="light"] {
+  --heatmap-empty:  rgba(138, 106, 45, 0.07);
+  --heatmap-tier-1: rgba(160, 195, 100, 0.55);
+  --heatmap-tier-2: rgba(244, 200, 90, 0.68);
+  --heatmap-tier-3: rgba(238, 145, 75, 0.80);
+  --heatmap-tier-4: rgba(225, 95, 80, 0.88);
+}
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: 44px repeat(24, 1fr);
+  gap: 4px;
+  align-items: center;
+}
+.heatmap-cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  background: var(--cell, var(--heatmap-empty));
+  transition: transform 180ms ease, filter 180ms ease;
+}
+.heatmap-cell:hover {
+  filter: brightness(1.18);
+  transform: scale(1.12);
+}
+.heatmap-day {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-soft);
+  padding-right: 8px;
+  text-align: right;
+}
+.heatmap-hour {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-soft);
+  text-align: center;
+}
+
 /* Reduced-motion: kill the looping/transformy animations. */
 @media (prefers-reduced-motion: reduce) {
   .glow-pulse,
@@ -892,10 +998,15 @@ button, a {
   .poster-active-edge::before,
   .poster-active-edge::after,
   .poster-spin,
+  .dot-pulse__bullet,
   .shimmer { animation: none !important; }
   .poster-fade-up,
   .poster-stagger > * { opacity: 1 !important; transform: none !important; }
   .poster-card.poster-card--hover:hover,
   .poster-stat:hover,
   .poster-button:hover { transform: none; }
+  .cursor-glow { display: none; }
+  .heatmap-cell { transition: none; }
+  .heatmap-cell:hover { transform: none; filter: none; }
+  .dot-pulse__bullet { opacity: 0.6; }
 }
