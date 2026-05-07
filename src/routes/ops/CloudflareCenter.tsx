@@ -89,9 +89,9 @@ export default function CloudflareCenter() {
             <li key={p.name} className="flex items-center justify-between gap-3 py-2">
               <span>
                 <span className="text-fg">{p.name}</span>{" "}
-                <span className="text-xs text-fg-soft">.pages.dev</span>
+                <span className="text-xs text-muted">.pages.dev</span>
               </span>
-              <span className="text-xs text-fg-soft">{p.latest ? p.latest.state : "—"}</span>
+              <span className="text-xs text-muted">{p.latest ? p.latest.state : "—"}</span>
             </li>
           ))}
         </ul>
@@ -103,7 +103,7 @@ export default function CloudflareCenter() {
             <li key={zone.zoneId} className="grid gap-2 py-3 md:grid-cols-[1.3fr_repeat(5,minmax(0,1fr))] md:items-center">
               <span>
                 <span className="text-fg">{zone.zoneName}</span>{" "}
-                <span className="text-xs text-fg-soft">{zone.since} → {zone.until}</span>
+                <span className="text-xs text-muted">{zone.since} → {zone.until}</span>
               </span>
               <span className="text-fg-soft">req <b className="text-fg">{compact.format(zone.totals.requests)}</b></span>
               <span className="text-fg-soft">views <b className="text-fg">{compact.format(zone.totals.pageViews)}</b></span>
@@ -132,13 +132,13 @@ export default function CloudflareCenter() {
             {(data?.d1Databases ?? []).map((d) => (
               <li key={d.uuid} className="flex items-center justify-between py-2">
                 <span>{d.name}</span>
-                <span className="font-mono text-xs text-fg-soft">{d.uuid.slice(0, 8)}</span>
+                <span className="font-mono text-xs text-muted">{d.uuid.slice(0, 8)}</span>
               </li>
             ))}
             {(data?.kvNamespaces ?? []).map((kv) => (
               <li key={kv.id} className="flex items-center justify-between py-2">
                 <span>{kv.title}</span>
-                <span className="font-mono text-xs text-fg-soft">{kv.id.slice(0, 8)}</span>
+                <span className="font-mono text-xs text-muted">{kv.id.slice(0, 8)}</span>
               </li>
             ))}
           </ul>

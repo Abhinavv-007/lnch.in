@@ -42,8 +42,8 @@ export default function VercelCenter() {
         <ul className="divide-rule text-sm">
           {(data?.projects ?? []).map((p) => (
             <li key={p.id} className="flex items-center justify-between py-2">
-              <span>{p.name} <span className="text-xs text-fg-soft">{p.framework ?? ""}</span></span>
-              <span className="text-xs text-fg-soft">
+              <span>{p.name} <span className="text-xs text-muted">{p.framework ?? ""}</span></span>
+              <span className="text-xs text-muted">
                 {p.latestDeployment ? `${p.latestDeployment.state} · ${timeAgo(p.latestDeployment.ts)}` : "—"}
               </span>
             </li>
@@ -56,7 +56,7 @@ export default function VercelCenter() {
           {(data?.recentDeployments ?? []).map((d, i) => (
             <li key={i} className="flex items-center justify-between py-2">
               <span>{d.project}</span>
-              <span className="flex items-center gap-2 text-xs text-fg-soft">
+              <span className="flex items-center gap-2 text-xs text-muted">
                 <span className={d.state === "ready" ? "pill-ok" : d.state === "error" ? "pill-err" : "pill-warn"}>{d.state}</span>
                 {timeAgo(d.ts)}
               </span>

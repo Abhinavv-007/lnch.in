@@ -89,9 +89,9 @@ function ProviderBlock({
                   {d.state}
                 </span>
                 <span className="truncate">{d.project}</span>
-                <span className="font-mono text-xs text-fg-soft">{shortHash(d.sha)}</span>
+                <span className="font-mono text-xs text-muted">{shortHash(d.sha)}</span>
               </span>
-              <span className="text-xs text-fg-soft">{timeAgo(d.ts)}</span>
+              <span className="text-xs text-muted">{timeAgo(d.ts)}</span>
             </li>
           ))
         )}

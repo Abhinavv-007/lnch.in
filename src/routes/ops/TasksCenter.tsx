@@ -76,7 +76,7 @@ export default function TasksCenter() {
                   <span className={t.status === "shipped" ? "pill-ok" : t.status === "blocked" ? "pill-err" : "pill-info"}>{t.status}</span>{" "}
                   {t.title}
                 </p>
-                <p className="text-[11px] text-fg-soft">{t.project_slug ?? "global"} · {timeAgo(t.updated_at)}</p>
+                <p className="text-[11px] text-muted">{t.project_slug ?? "global"} · {timeAgo(t.updated_at)}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 {t.status !== "shipped" ? (

@@ -887,7 +887,14 @@ button, a {
   .glow-pulse,
   .animate-marquee,
   .poster-live::after,
+  .poster-fade-up,
+  .poster-stagger > *,
+  .poster-active-edge::before,
+  .poster-active-edge::after,
+  .poster-spin,
   .shimmer { animation: none !important; }
+  .poster-fade-up,
+  .poster-stagger > * { opacity: 1 !important; transform: none !important; }
   .poster-card.poster-card--hover:hover,
   .poster-stat:hover,
   .poster-button:hover { transform: none; }

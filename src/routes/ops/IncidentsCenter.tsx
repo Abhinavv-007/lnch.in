@@ -61,7 +61,7 @@ export default function IncidentsCenter() {
                   <span className={i.status === "resolved" ? "pill-ok" : i.status === "monitoring" ? "pill-info" : "pill-err"}>{i.status}</span>{" "}
                   {i.title}
                 </p>
-                <p className="text-[11px] text-fg-soft">{i.project_slug ?? "global"} · opened {timeAgo(i.opened_at)} {i.resolved_at ? `· resolved ${timeAgo(i.resolved_at)}` : ""}</p>
+                <p className="text-[11px] text-muted">{i.project_slug ?? "global"} · opened {timeAgo(i.opened_at)} {i.resolved_at ? `· resolved ${timeAgo(i.resolved_at)}` : ""}</p>
               </div>
               {i.status !== "resolved" ? (
                 <div className="flex gap-2">

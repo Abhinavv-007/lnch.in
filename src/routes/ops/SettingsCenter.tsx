@@ -45,7 +45,7 @@ export default function SettingsCenter() {
             return (
               <li key={p.slug} className="flex flex-wrap items-center justify-between gap-3 py-2">
                 <span className={p.accent}>{p.name}</span>
-                <div className="flex flex-wrap items-center gap-1.5 text-xs text-fg-soft">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
                   <span className="pill">{p.repo}</span>
                   {p.site ? <span className="pill">{new URL(p.site).host}</span> : null}
                   <span className={fb?.configured ? "pill-ok" : "pill"}>fb · {fb?.configured ? fb.projectId : "—"}</span>

@@ -51,7 +51,7 @@ export default function ApiCenter() {
               <li key={p.target} className="flex items-center justify-between gap-3 py-2">
                 <span className="min-w-0">
                   <span className={proj?.accent ?? "text-fg"}>{proj?.name ?? p.project}</span>{" "}
-                  <span className="font-mono text-xs text-fg-soft">{p.target}</span>
+                  <span className="font-mono text-xs text-muted">{p.target}</span>
                 </span>
                 <span className="flex items-center gap-3 text-xs">
                   <span className="text-fg-soft">{p.latencyMs ?? "—"}ms · {p.status ?? "—"}</span>

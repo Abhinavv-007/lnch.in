@@ -58,8 +58,8 @@ export default function NotesCenter() {
             <li key={n.id} className="flex items-start justify-between gap-3 py-2">
               <div className="min-w-0">
                 <p className="font-medium text-fg">{n.title}</p>
-                <p className="line-clamp-2 text-xs text-fg-soft">{n.body}</p>
-                <p className="mt-1 text-[11px] text-fg-soft">{n.project_slug ?? "global"} · {timeAgo(n.updated_at)}</p>
+                <p className="line-clamp-2 text-xs text-muted">{n.body}</p>
+                <p className="mt-1 text-[11px] text-muted">{n.project_slug ?? "global"} · {timeAgo(n.updated_at)}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <button className="btn-ghost text-xs" onClick={() => convertToTask(n)}>To task</button>

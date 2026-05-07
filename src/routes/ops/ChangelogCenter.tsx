@@ -67,7 +67,7 @@ export default function ChangelogCenter() {
               <li key={c.sha} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 py-2">
                 <span className="font-mono text-xs text-accent">{shortHash(c.sha)}</span>
                 <span className="truncate">{c.message.split("\n")[0]}</span>
-                <span className="text-xs text-fg-soft">{timeAgo(c.ts)}</span>
+                <span className="text-xs text-muted">{timeAgo(c.ts)}</span>
               </li>
             ))}
           </ul>
@@ -81,7 +81,7 @@ export default function ChangelogCenter() {
               <span className="min-w-0">
                 <span className={d.status === "published" ? "pill-ok" : "pill-warn"}>{d.status}</span>{" "}
                 <span className="text-fg">{d.title}</span>{" "}
-                <span className="text-xs text-fg-soft">{d.project_slug} · {timeAgo(d.updated_at)}</span>
+                <span className="text-xs text-muted">{d.project_slug} · {timeAgo(d.updated_at)}</span>
               </span>
               {d.status === "draft" ? (
                 <button onClick={() => markPublished(d.id)} className="btn-ghost text-xs">Publish</button>

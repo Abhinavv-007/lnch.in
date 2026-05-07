@@ -21,7 +21,7 @@ export default function AuditCenter() {
             <li key={e.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 py-2">
               <span className="font-mono text-xs text-accent">{e.action}</span>
               <span className="truncate text-fg-soft">{e.target ?? "—"}</span>
-              <span className="text-xs text-fg-soft">{timeAgo(e.ts)}</span>
+              <span className="text-xs text-muted">{timeAgo(e.ts)}</span>
             </li>
           ))}
         </ul>

@@ -48,9 +48,9 @@ export default function GithubCenter() {
                 <span className="font-mono text-xs text-accent">{shortHash(c.sha)}</span>
                 <div className="min-w-0">
                   <p className="truncate">{c.message}</p>
-                  <p className="text-xs text-fg-soft">{c.repo}</p>
+                  <p className="text-xs text-muted">{c.repo}</p>
                 </div>
-                <span className="text-xs text-fg-soft">{timeAgo(c.ts)}</span>
+                <span className="text-xs text-muted">{timeAgo(c.ts)}</span>
               </li>
             ))}
           </ul>
@@ -63,7 +63,7 @@ export default function GithubCenter() {
                 <span className="truncate">
                   <span className="text-fg-soft">#{p.number}</span> {p.title}
                 </span>
-                <span className="text-xs text-fg-soft">{p.repo} · {timeAgo(p.ts)}</span>
+                <span className="text-xs text-muted">{p.repo} · {timeAgo(p.ts)}</span>
               </li>
             ))}
           </ul>
@@ -92,7 +92,7 @@ export default function GithubCenter() {
               data!.recentReleases.map((r) => (
                 <li key={`${r.repo}-${r.tag}`} className="flex items-center justify-between gap-3 py-2 text-sm">
                   <span className="truncate">{r.name}</span>
-                  <span className="text-xs text-fg-soft">{r.tag} · {timeAgo(r.ts)}</span>
+                  <span className="text-xs text-muted">{r.tag} · {timeAgo(r.ts)}</span>
                 </li>
               ))
             )}

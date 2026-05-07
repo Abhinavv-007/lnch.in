@@ -163,7 +163,7 @@ export default function OpsLogin() {
           </form>
         </div>
 
-        <p className="mt-6 text-center text-[11px] text-fg-soft">
+        <p className="mt-6 text-center text-[11px] text-muted">
           lnch.in · LaunchOps · all admin actions are audited.
         </p>
       </div>

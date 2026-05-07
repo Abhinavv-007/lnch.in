@@ -162,7 +162,7 @@ function OverviewSection({
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-xs text-fg-soft">
+          <p className="mt-3 text-xs text-muted">
             Mobile apps appear under their parent project — they're not first-class LaunchOps targets.
           </p>
         </div>
@@ -254,7 +254,7 @@ function GithubSection({ detail }: { detail: Detail | null }) {
             <li key={c.sha} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 py-2 text-sm">
               <span className="font-mono text-xs text-accent">{shortHash(c.sha)}</span>
               <span className="truncate">{c.message}</span>
-              <span className="text-xs text-fg-soft">
+              <span className="text-xs text-muted">
                 {c.author} · {timeAgo(c.ts)}
               </span>
             </li>
@@ -280,7 +280,7 @@ function GithubSection({ detail }: { detail: Detail | null }) {
               g.releases.map((r) => (
                 <li key={r.tag} className="flex justify-between border-b border-rule-soft py-1.5">
                   <span>{r.name}</span>
-                  <span className="text-xs text-fg-soft">
+                  <span className="text-xs text-muted">
                     {r.tag} · {timeAgo(r.ts)}
                   </span>
                 </li>
@@ -326,9 +326,9 @@ function DeploymentsSection({ detail }: { detail: Detail | null }) {
                 >
                   {r.state}
                 </span>
-                <span className="font-mono text-xs text-fg-soft">{shortHash(r.sha)}</span>
+                <span className="font-mono text-xs text-muted">{shortHash(r.sha)}</span>
               </span>
-              <span className="text-xs text-fg-soft">{timeAgo(r.ts)}</span>
+              <span className="text-xs text-muted">{timeAgo(r.ts)}</span>
             </li>
           ))}
         </ul>
