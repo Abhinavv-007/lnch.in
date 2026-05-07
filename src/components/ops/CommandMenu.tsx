@@ -98,14 +98,14 @@ export default function CommandMenu({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex items-start justify-center bg-ink-950/80 backdrop-blur-sm px-4 pt-[10vh]"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-paper/85 backdrop-blur-sm px-4 pt-[10vh]"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="panel w-full max-w-xl overflow-hidden">
-        <div className="flex items-center gap-3 border-b border-ink-600/50 px-4 py-3">
-          <Search className="h-4 w-4 text-ink-300" />
+      <div className="paper-panel w-full max-w-xl overflow-hidden">
+        <div className="flex items-center gap-3 border-b border-rule px-4 py-3">
+          <Search className="h-4 w-4 text-fg-soft" />
           <input
             ref={inputRef}
             value={query}
@@ -127,21 +127,21 @@ export default function CommandMenu({
               }
             }}
             placeholder="Type a project, page, or action…"
-            className="w-full bg-transparent text-sm text-ink-100 outline-none"
+            className="w-full bg-transparent text-sm text-fg outline-none placeholder:text-muted"
           />
-          <kbd className="rounded-md border border-ink-600 bg-ink-800/80 px-1.5 py-0.5 text-[10px] text-ink-300">
+          <kbd className="rounded-md border border-rule bg-paper-soft px-1.5 py-0.5 text-[10px] text-fg-soft">
             Esc
           </kbd>
         </div>
         <div className="max-h-[50vh] overflow-y-auto py-1">
           {filtered.length === 0 ? (
-            <p className="px-4 py-6 text-center text-sm text-ink-300">
+            <p className="px-4 py-6 text-center text-sm text-muted">
               No matches.
             </p>
           ) : (
             grouped.map(([group, items]) => (
               <div key={group} className="px-2 py-1">
-                <p className="px-2 py-1 text-[10px] uppercase tracking-[0.28em] text-ink-300/70">
+                <p className="px-2 py-1 text-[10px] uppercase tracking-[0.28em] text-muted">
                   {group}
                 </p>
                 {items.map((item) => {
@@ -154,19 +154,19 @@ export default function CommandMenu({
                       className={cn(
                         "flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left transition",
                         idx === active
-                          ? "bg-ink-800/80 text-ink-100 ring-1 ring-gilt-700/50"
-                          : "text-ink-200 hover:bg-ink-800/60",
+                          ? "bg-paper-elev text-fg ring-1 ring-accent/50"
+                          : "text-fg-soft hover:bg-paper-elev",
                       )}
                     >
                       <div className="min-w-0">
                         <p className="truncate text-sm">{item.label}</p>
                         {item.description ? (
-                          <p className="truncate text-xs text-ink-300">
+                          <p className="truncate text-xs text-muted">
                             {item.description}
                           </p>
                         ) : null}
                       </div>
-                      <ArrowRight className="h-4 w-4 shrink-0 text-ink-300" />
+                      <ArrowRight className="h-4 w-4 shrink-0 text-fg-soft" />
                     </button>
                   );
                 })}

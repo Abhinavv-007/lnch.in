@@ -3,31 +3,22 @@ import { cn } from "@/lib/cn";
 
 type Tone = "neutral" | "ok" | "warn" | "err" | "gilt" | "info";
 
-const TONE_RING: Record<Tone, string> = {
-  neutral: "ring-ink-600/60",
-  ok: "ring-emerald-700/50",
-  warn: "ring-amber-700/50",
-  err: "ring-red-700/50",
-  gilt: "ring-gilt-700/60",
-  info: "ring-sky-700/50",
-};
-
-const TONE_GLOW: Record<Tone, string> = {
-  neutral: "from-ink-700/30 to-transparent",
-  ok: "from-emerald-500/10 to-transparent",
-  warn: "from-amber-500/10 to-transparent",
-  err: "from-red-500/10 to-transparent",
-  gilt: "from-gilt-500/10 to-transparent",
-  info: "from-sky-500/10 to-transparent",
-};
-
 const TONE_DOT: Record<Tone, string> = {
-  neutral: "bg-ink-300",
-  ok: "bg-emerald-400",
-  warn: "bg-amber-400",
-  err: "bg-red-400",
-  gilt: "bg-gilt-300",
-  info: "bg-sky-400",
+  neutral: "bg-muted",
+  ok: "bg-[var(--signal-ok)]",
+  warn: "bg-[var(--signal-warn)]",
+  err: "bg-[var(--signal-err)]",
+  gilt: "bg-accent",
+  info: "bg-[var(--signal-info)]",
+};
+
+const TONE_TEXT: Record<Tone, string> = {
+  neutral: "text-fg",
+  ok: "text-[var(--signal-ok)]",
+  warn: "text-[var(--signal-warn)]",
+  err: "text-[var(--signal-err)]",
+  gilt: "text-accent",
+  info: "text-[var(--signal-info)]",
 };
 
 export type StatCardProps = {
@@ -43,6 +34,12 @@ export type StatCardProps = {
   onClick?: () => void;
 };
 
+/**
+ * Editorial poster stat card. Reads tone from CSS variables so it retones
+ * cleanly in light/dark mode. The frame uses the `.poster-stat` primitive
+ * (scalloped corners, dashed bg) for visual cohesion with the rest of the
+ * poster system.
+ */
 export default function StatCard({
   icon,
   label,
@@ -60,37 +57,20 @@ export default function StatCard({
     <Wrapper
       {...(props as object)}
       className={cn(
-        "panel relative overflow-hidden p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gilt-300/40",
-        "ring-1",
-        TONE_RING[tone],
-        (href || onClick) && "hover:-translate-y-0.5 hover:border-gilt-700/60",
+        "poster-stat poster-stat--block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40",
+        (href || onClick) && "poster-stat--link",
         className,
       )}
     >
-      <div
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute inset-0 bg-gradient-to-br opacity-70",
-          TONE_GLOW[tone],
-        )}
-      />
-      <div className="relative flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-ink-300">
-            {icon}
-            <span className="truncate">{label}</span>
-          </div>
-          <p className="mt-2 truncate font-serif text-3xl tracking-tight text-ink-100">
-            {value}
-          </p>
-          {hint ? (
-            <p className="mt-1 truncate text-xs text-ink-300">{hint}</p>
-          ) : null}
-        </div>
+      <div className="flex items-center gap-2 poster-stat__label">
+        {icon}
+        <span className="truncate">{label}</span>
       </div>
+      <p className={cn("poster-stat__value", TONE_TEXT[tone])}>{value}</p>
+      {hint ? <p className="poster-stat__hint">{hint}</p> : null}
       {status ? (
-        <div className="relative mt-4 flex items-center gap-2 text-[11px] text-ink-300">
-          <span className={cn("h-1.5 w-1.5 rounded-full glow-pulse", TONE_DOT[tone])} />
+        <div className="poster-stat__status">
+          <span className={cn("poster-stat__dot glow-pulse", TONE_DOT[tone])} />
           <span className="truncate">{status}</span>
         </div>
       ) : null}

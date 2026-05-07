@@ -1,3 +1,13 @@
+/**
+ * Operator command center for lnch.in.
+ *
+ * Visually this page sits inside the same poster system as the public
+ * landing — every card is a `.poster-card` or `.poster-stat`, every list
+ * uses `.poster-row`, every label is mono-uppercase with wide tracking. No
+ * floating SaaS panels. The data comes from `/api/ops/overview` and gracefully
+ * degrades to honest "missing integration" copy whenever a backend isn't
+ * configured.
+ */
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -82,7 +92,7 @@ export default function Dashboard() {
 
   if (error) {
     return (
-      <div className="panel p-5 text-sm text-red-300">
+      <div className="poster-card poster-card--sm text-sm text-[var(--signal-err)]">
         Couldn't load the overview: {error}
       </div>
     );
@@ -94,7 +104,7 @@ export default function Dashboard() {
         eyebrow="developer command center"
         title={
           <>
-            Ship. Scale. <span className="italic text-gilt-300">Sleep well.</span>
+            Ship. Scale. <span className="cursive-accent text-accent">Sleep well.</span>
           </>
         }
         description="One place to build, deploy, and operate every lnch.in project with confidence."
@@ -284,33 +294,30 @@ export default function Dashboard() {
       </section>
 
       <section className="grid gap-3 md:grid-cols-3">
-        <Link to="/ops/security" className="block">
-          <StatCard
-            icon={<Shield className="h-3.5 w-3.5" />}
-            label="Security"
-            tone="ok"
-            value="Audit ready"
-            status="Secret-handling, audit log and gates active"
-          />
-        </Link>
-        <Link to="/ops/audit" className="block">
-          <StatCard
-            icon={<ClipboardList className="h-3.5 w-3.5" />}
-            label="Audit"
-            tone="info"
-            value={data ? "Live" : <Shimmer w={32} />}
-            status="All admin actions are recorded"
-          />
-        </Link>
-        <Link to="/ops/incidents" className="block">
-          <StatCard
-            icon={<Flame className="h-3.5 w-3.5" />}
-            label="Incidents"
-            tone={data?.incidents.open ? "err" : "neutral"}
-            value={data ? data.incidents.open : <Shimmer w={32} />}
-            status={data?.incidents.open ? "Open incidents need attention" : "No open incidents"}
-          />
-        </Link>
+        <StatCard
+          icon={<Shield className="h-3.5 w-3.5" />}
+          label="Security"
+          tone="ok"
+          value="Audit ready"
+          status="Secret-handling, audit log and gates active"
+          href="/ops/security"
+        />
+        <StatCard
+          icon={<ClipboardList className="h-3.5 w-3.5" />}
+          label="Audit"
+          tone="info"
+          value={data ? "Live" : <Shimmer w={32} />}
+          status="All admin actions are recorded"
+          href="/ops/audit"
+        />
+        <StatCard
+          icon={<Flame className="h-3.5 w-3.5" />}
+          label="Incidents"
+          tone={data?.incidents.open ? "err" : "neutral"}
+          value={data ? data.incidents.open : <Shimmer w={32} />}
+          status={data?.incidents.open ? "Open incidents need attention" : "No open incidents"}
+          href="/ops/incidents"
+        />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
@@ -328,14 +335,14 @@ export default function Dashboard() {
 }
 
 function Shimmer({ w = 24 }: { w?: number }) {
-  return <span className={`inline-block h-7 rounded-md shimmer`} style={{ width: w }} />;
+  return <span className="inline-block h-7 rounded-md shimmer" style={{ width: w }} />;
 }
 
 function ProjectHealthCard({ data }: { data: Overview | null }) {
   return (
-    <div className="panel p-5">
+    <div className="poster-card poster-card--sm">
       <SectionTitle hint="last health probe">Projects</SectionTitle>
-      <ul className="space-y-2">
+      <ul>
         {PROJECTS.map((p) => {
           const probe = data?.apiHealth.find((a) => a.project === p.slug);
           const state: HealthState = !data
@@ -346,20 +353,21 @@ function ProjectHealthCard({ data }: { data: Overview | null }) {
                 : "err"
               : "missing";
           return (
-            <li
-              key={p.slug}
-              className="flex items-center justify-between gap-3 rounded-xl border border-ink-600/40 bg-ink-900/40 px-3 py-2"
-            >
-              <Link to={`/ops/projects/${p.slug}`} className="flex min-w-0 items-center gap-2 hover:text-gilt-200">
-                <span className={`font-serif text-sm ${p.accent}`}>{p.name}</span>
-                <span className="truncate text-xs text-ink-300">
+            <li key={p.slug} className="poster-row">
+              <span aria-hidden className="poster-bullet text-accent" />
+              <Link
+                to={`/ops/projects/${p.slug}`}
+                className="poster-row__label flex min-w-0 items-center gap-2 hover:text-accent"
+              >
+                <span className="font-serif">{p.name}</span>
+                <span className="truncate text-xs text-muted">
                   {p.site ? new URL(p.site).host : "—"}
                 </span>
               </Link>
-              <HealthDot
-                state={state}
-                label={probe ? `${probe.latencyMs ?? "—"}ms` : data ? "no probe" : "…"}
-              />
+              <span className="poster-row__detail poster-row__hide-sm">
+                {probe ? `${probe.latencyMs ?? "—"}ms` : data ? "no probe" : "…"}
+              </span>
+              <HealthDot state={state} label={state} />
             </li>
           );
         })}
@@ -370,28 +378,26 @@ function ProjectHealthCard({ data }: { data: Overview | null }) {
 
 function RecentCommitsCard({ data }: { data: Overview | null }) {
   return (
-    <div className="panel p-5">
+    <div className="poster-card poster-card--sm">
       <SectionTitle hint="across all repos">Recent commits</SectionTitle>
       {!data ? (
         <ListShimmer />
       ) : data.recentCommits.length === 0 ? (
-        <p className="text-sm text-ink-300">
+        <p className="text-sm text-fg-soft">
           {data.integrations.github.configured
             ? "No recent commits to surface."
             : "Add GITHUB_TOKEN to surface commits."}
         </p>
       ) : (
-        <ul className="space-y-2 text-sm">
+        <ul>
           {data.recentCommits.slice(0, 6).map((c) => (
-            <li key={c.repo + c.sha} className="rounded-lg border border-ink-600/40 bg-ink-900/40 px-3 py-2">
-              <p className="truncate text-ink-100">{c.message}</p>
-              <p className="mt-0.5 flex items-center gap-2 text-xs text-ink-300">
-                <span className="font-mono text-gilt-300">{shortHash(c.sha)}</span>
-                <span>·</span>
-                <span className="truncate">{c.repo}</span>
-                <span>·</span>
-                <span>{timeAgo(c.ts)}</span>
-              </p>
+            <li key={c.repo + c.sha} className="poster-row">
+              <span className="poster-row__label font-mono text-xs text-accent">
+                {shortHash(c.sha)}
+              </span>
+              <span className="poster-row__label flex-1 text-fg">{c.message}</span>
+              <span className="poster-row__detail poster-row__hide-sm">{c.repo}</span>
+              <span className="poster-row__detail">{timeAgo(c.ts)}</span>
             </li>
           ))}
         </ul>
@@ -402,45 +408,36 @@ function RecentCommitsCard({ data }: { data: Overview | null }) {
 
 function RecentDeploymentsCard({ data }: { data: Overview | null }) {
   return (
-    <div className="panel p-5">
+    <div className="poster-card poster-card--sm">
       <SectionTitle hint="latest 6">Recent deployments</SectionTitle>
       {!data ? (
         <ListShimmer />
       ) : data.recentDeployments.length === 0 ? (
-        <p className="text-sm text-ink-300">
+        <p className="text-sm text-fg-soft">
           {data.integrations.cloudflare.configured || data.integrations.vercel.configured
             ? "No deployments in the last day."
             : "Configure Cloudflare or Vercel to surface deployments."}
         </p>
       ) : (
-        <ul className="space-y-2 text-sm">
-          {data.recentDeployments.slice(0, 6).map((d) => (
-            <li
-              key={d.project + d.ts}
-              className="flex items-center justify-between gap-3 rounded-lg border border-ink-600/40 bg-ink-900/40 px-3 py-2"
-            >
-              <div className="min-w-0">
-                <p className="truncate text-ink-100">
-                  <span className="text-ink-200">{d.project}</span>{" "}
-                  <span className="text-ink-300">via {d.provider}</span>
-                </p>
-                <p className="mt-0.5 text-xs text-ink-300">
-                  {shortHash(d.sha)} · {timeAgo(d.ts)}
-                </p>
-              </div>
-              <span
-                className={
-                  d.state === "ready" || d.state === "success"
-                    ? "pill-ok"
-                    : d.state === "error" || d.state === "failure"
-                      ? "pill-err"
-                      : "pill-warn"
-                }
-              >
-                {d.state}
-              </span>
-            </li>
-          ))}
+        <ul>
+          {data.recentDeployments.slice(0, 6).map((d) => {
+            const stamp =
+              d.state === "ready" || d.state === "success"
+                ? "poster-stamp poster-stamp--ok"
+                : d.state === "error" || d.state === "failure"
+                  ? "poster-stamp poster-stamp--err"
+                  : "poster-stamp poster-stamp--warn";
+            return (
+              <li key={d.project + d.ts} className="poster-row">
+                <span className="poster-row__label text-fg">{d.project}</span>
+                <span className="poster-row__label flex-1 text-muted">
+                  {d.provider} · {shortHash(d.sha)}
+                </span>
+                <span className="poster-row__detail poster-row__hide-sm">{timeAgo(d.ts)}</span>
+                <span className={stamp}>{d.state}</span>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
@@ -450,22 +447,24 @@ function RecentDeploymentsCard({ data }: { data: Overview | null }) {
 function NotesTeaser({ data }: { data: Overview | null }) {
   return (
     <Link to="/ops/notes" className="block">
-      <div className="panel p-5 hover:border-gilt-700/60">
+      <div className="poster-card poster-card--sm poster-card--hover">
         <div className="flex items-center justify-between">
           <SectionTitle hint="notes">Latest note</SectionTitle>
-          <StickyNote className="h-4 w-4 text-ink-300" />
+          <StickyNote className="h-4 w-4 text-muted" />
         </div>
         {!data ? (
           <Shimmer w={140} />
         ) : data.notes.latest ? (
           <>
-            <p className="text-sm text-ink-100">{data.notes.latest.title}</p>
-            <p className="mt-1 text-xs text-ink-300">{timeAgo(data.notes.latest.ts)}</p>
+            <p className="text-sm text-fg">{data.notes.latest.title}</p>
+            <p className="mt-1 text-xs text-muted">{timeAgo(data.notes.latest.ts)}</p>
           </>
         ) : (
-          <p className="text-sm text-ink-300">No notes yet.</p>
+          <p className="text-sm text-fg-soft">No notes yet.</p>
         )}
-        <p className="mt-3 text-[11px] text-ink-300">{data?.notes.count ?? 0} total</p>
+        <p className="mt-3 text-xs uppercase tracking-[0.28em] text-muted">
+          {data?.notes.count ?? 0} total
+        </p>
       </div>
     </Link>
   );
@@ -474,21 +473,21 @@ function NotesTeaser({ data }: { data: Overview | null }) {
 function TasksTeaser({ data }: { data: Overview | null }) {
   return (
     <Link to="/ops/tasks" className="block">
-      <div className="panel p-5 hover:border-gilt-700/60">
+      <div className="poster-card poster-card--sm poster-card--hover">
         <div className="flex items-center justify-between">
           <SectionTitle hint="tasks">Open tasks</SectionTitle>
-          <CheckSquare className="h-4 w-4 text-ink-300" />
+          <CheckSquare className="h-4 w-4 text-muted" />
         </div>
         {!data ? (
           <Shimmer w={140} />
         ) : (
           <>
-            <p className="font-serif text-3xl tracking-tight">{data.tasks.open}</p>
-            <p className="mt-1 text-xs text-ink-300">
+            <p className="font-serif text-3xl tracking-tight text-fg">{data.tasks.open}</p>
+            <p className="mt-1 text-xs text-muted">
               {data.tasks.urgent} urgent ·{" "}
               {data.tasks.latest ? `last ${timeAgo(data.tasks.latest.ts)}` : "none yet"}
             </p>
-            <div className="mt-3 text-gilt-300">
+            <div className="mt-3 text-accent">
               <Sparkline values={[2, 3, 2, 4, 5, 4, 6, 5, 7, 6, 8, 7]} />
             </div>
           </>
