@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import PageHeader from "@/components/ops/PageHeader";
 import SectionTitle from "@/components/ops/SectionTitle";
 import { api } from "@/lib/api";
@@ -8,16 +9,29 @@ import { timeAgo } from "@/lib/format";
 type Note = { id: number; title: string; body: string; project_slug: string | null; tags: string | null; created_at: number; updated_at: number };
 
 export default function NotesCenter() {
+  const [params, setParams] = useSearchParams();
+  // Project filter is URL-driven so deep links from /ops/projects/:slug/notes → /ops/notes?project_slug=:slug carry over.
+  const projectFilter = params.get("project_slug") ?? "";
   const [notes, setNotes] = useState<Note[] | null>(null);
-  const [draft, setDraft] = useState({ title: "", body: "", project_slug: "", tags: "" });
+  const [draft, setDraft] = useState({ title: "", body: "", project_slug: projectFilter, tags: "" });
 
   async function refresh() {
-    const r = await api.get<{ notes: Note[] }>("/api/ops/notes");
+    const path = projectFilter
+      ? `/api/ops/notes?project=${encodeURIComponent(projectFilter)}`
+      : "/api/ops/notes";
+    const r = await api.get<{ notes: Note[] }>(path);
     setNotes(r.notes);
   }
   useEffect(() => {
     refresh();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectFilter]);
+
+  function setProject(next: string) {
+    if (next) params.set("project_slug", next);
+    else params.delete("project_slug");
+    setParams(params, { replace: true });
+  }
 
   async function save() {
     if (!draft.title) return;
@@ -52,7 +66,17 @@ export default function NotesCenter() {
         </div>
       </div>
       <div className="panel p-5">
-        <SectionTitle hint={`${notes?.length ?? 0} total`}>All notes</SectionTitle>
+        <SectionTitle
+          hint={`${notes?.length ?? 0} total`}
+          action={
+            <select className="input-base" value={projectFilter} onChange={(e) => setProject(e.target.value)}>
+              <option value="">All projects</option>
+              {PROJECTS.map((p) => (<option key={p.slug} value={p.slug}>{p.name}</option>))}
+            </select>
+          }
+        >
+          {projectFilter ? `Notes · ${PROJECTS.find((p) => p.slug === projectFilter)?.name ?? projectFilter}` : "All notes"}
+        </SectionTitle>
         <ul className="divide-rule text-sm">
           {(notes ?? []).map((n) => (
             <li key={n.id} className="flex items-start justify-between gap-3 py-2">
