@@ -31,7 +31,7 @@ export default function SettingsCenter() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="settings" title="Settings" description="Integration health, identity, and the projects LaunchOps monitors." />
-      <section className="grid gap-3 md:grid-cols-4">
+      <section className="poster-stagger grid gap-3 md:grid-cols-4">
         <StatCard label="GitHub" value={data?.integrations.github.configured ? "Linked" : "—"} tone={data?.integrations.github.configured ? "ok" : "neutral"} />
         <StatCard label="Cloudflare" value={data?.integrations.cloudflare.configured ? "Linked" : "—"} tone={data?.integrations.cloudflare.configured ? "ok" : "neutral"} />
         <StatCard label="Vercel" value={data?.integrations.vercel.configured ? "Linked" : "—"} tone={data?.integrations.vercel.configured ? "ok" : "neutral"} />
@@ -39,13 +39,13 @@ export default function SettingsCenter() {
       </section>
       <div className="panel p-5">
         <SectionTitle>Project registry</SectionTitle>
-        <ul className="divide-y divide-ink-600/40 text-sm">
+        <ul className="divide-rule text-sm">
           {PROJECTS.map((p) => {
             const fb = data?.firebaseProjects.find((f) => f.slug === p.slug);
             return (
               <li key={p.slug} className="flex flex-wrap items-center justify-between gap-3 py-2">
                 <span className={p.accent}>{p.name}</span>
-                <div className="flex flex-wrap items-center gap-1.5 text-xs text-ink-300">
+                <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted">
                   <span className="pill">{p.repo}</span>
                   {p.site ? <span className="pill">{new URL(p.site).host}</span> : null}
                   <span className={fb?.configured ? "pill-ok" : "pill"}>fb · {fb?.configured ? fb.projectId : "—"}</span>
@@ -58,10 +58,10 @@ export default function SettingsCenter() {
       </div>
       <div className="panel p-5">
         <SectionTitle>WebAuthn relying party</SectionTitle>
-        <p className="text-sm text-ink-200">
+        <p className="text-sm text-fg-soft">
           rpId · <span className="font-mono">{data?.rpId ?? "…"}</span>
         </p>
-        <p className="text-sm text-ink-200">
+        <p className="text-sm text-fg-soft">
           origin · <span className="font-mono">{data?.origin ?? "…"}</span>
         </p>
       </div>

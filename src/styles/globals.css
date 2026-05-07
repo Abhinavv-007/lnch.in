@@ -216,6 +216,16 @@ body {
   .signal-warn { color: var(--signal-warn); }
   .signal-err  { color: var(--signal-err); }
   .signal-info { color: var(--signal-info); }
+
+  /* Soft accent fill for active states / hovered tags. Reads from --accent so it retones in light mode. */
+  .bg-accent-soft  { background-color: color-mix(in oklab, var(--accent) 14%, transparent); }
+  .bg-accent-faint { background-color: color-mix(in oklab, var(--accent)  6%, transparent); }
+  .border-accent   { border-color: var(--accent); }
+
+  /* Theme-aware list dividers. Replaces the legacy `divide-ink-600/40` pattern
+     so ops pages retone cleanly between light and dark. */
+  .divide-rule       > * + * { border-top: 1px solid color-mix(in oklab, var(--line-strong) 60%, transparent); }
+  .divide-rule-soft  > * + * { border-top: 1px dashed color-mix(in oklab, var(--line-strong) 50%, transparent); }
 }
 
 @layer components {
@@ -792,6 +802,74 @@ button, a {
   opacity: 0.4;
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+   Poster motion polish.
+
+   These keep the editorial system feeling alive without ever being noisy:
+   - lists / card grids fade-and-rise in with a tiny stagger
+   - active tabs/cards get an animated dashed border that scrolls slowly
+   - the accent dot in poster-live keeps pulsing on `live` surfaces
+   Everything respects prefers-reduced-motion (bottom of file).
+   ─────────────────────────────────────────────────────────────────────── */
+@keyframes poster-fade-up {
+  0%   { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.poster-fade-up { animation: poster-fade-up 460ms cubic-bezier(0.21, 0.65, 0.3, 1) both; }
+
+.poster-stagger > * { animation: poster-fade-up 460ms cubic-bezier(0.21, 0.65, 0.3, 1) both; }
+.poster-stagger > *:nth-child(1)  { animation-delay:   0ms; }
+.poster-stagger > *:nth-child(2)  { animation-delay:  60ms; }
+.poster-stagger > *:nth-child(3)  { animation-delay: 120ms; }
+.poster-stagger > *:nth-child(4)  { animation-delay: 180ms; }
+.poster-stagger > *:nth-child(5)  { animation-delay: 240ms; }
+.poster-stagger > *:nth-child(6)  { animation-delay: 300ms; }
+.poster-stagger > *:nth-child(7)  { animation-delay: 360ms; }
+.poster-stagger > *:nth-child(8)  { animation-delay: 420ms; }
+.poster-stagger > *:nth-child(n+9){ animation-delay: 480ms; }
+
+@keyframes poster-edge-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* Slow horizontal accent shimmer on top + bottom edges. Use on the active
+   tab pill or the focused card to draw the eye without being loud. */
+.poster-active-edge {
+  position: relative;
+  isolation: isolate;
+}
+.poster-active-edge::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background:
+    linear-gradient(90deg, transparent, color-mix(in oklab, var(--accent) 90%, transparent), transparent);
+  background-size: 200% 100%;
+  animation: poster-edge-shimmer 4s linear infinite;
+  pointer-events: none;
+}
+.poster-active-edge::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0;
+  height: 1px;
+  background:
+    linear-gradient(90deg, transparent, color-mix(in oklab, var(--accent) 90%, transparent), transparent);
+  background-size: 200% 100%;
+  animation: poster-edge-shimmer 4s linear infinite reverse;
+  pointer-events: none;
+}
+.poster-active-edge::before { top: 0; }
+.poster-active-edge::after  { bottom: 0; }
+
+/* Slow rotating dashed accent ring — used as a decorative idle indicator. */
+@keyframes poster-spin {
+  to { transform: rotate(360deg); }
+}
+.poster-spin { animation: poster-spin 18s linear infinite; }
+
 /*
  * View Transitions: zero out the default crossfade so the circular reveal
  * is the only visible animation on theme switch.
@@ -809,7 +887,14 @@ button, a {
   .glow-pulse,
   .animate-marquee,
   .poster-live::after,
+  .poster-fade-up,
+  .poster-stagger > *,
+  .poster-active-edge::before,
+  .poster-active-edge::after,
+  .poster-spin,
   .shimmer { animation: none !important; }
+  .poster-fade-up,
+  .poster-stagger > * { opacity: 1 !important; transform: none !important; }
   .poster-card.poster-card--hover:hover,
   .poster-stat:hover,
   .poster-button:hover { transform: none; }

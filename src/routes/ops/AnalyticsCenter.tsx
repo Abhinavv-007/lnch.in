@@ -25,7 +25,7 @@ export default function AnalyticsCenter() {
           needs={["FIREBASE_<PROJECT>_PROJECT_ID", "FIREBASE_<PROJECT>_CLIENT_EMAIL", "FIREBASE_<PROJECT>_PRIVATE_KEY"]}
         />
       ) : (
-        <section className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+        <section className="poster-stagger grid gap-3 md:grid-cols-2 lg:grid-cols-3">
           {data.firebase.perProject.map((p) => (
             <StatCard
               key={p.slug}
@@ -39,7 +39,7 @@ export default function AnalyticsCenter() {
       )}
       <div className="panel p-5">
         <SectionTitle hint="future">Per-project analytics</SectionTitle>
-        <p className="text-sm text-ink-300">
+        <p className="text-sm text-fg-soft">
           Project-specific analytics (per Modih inbox counts, Clex transfer counts, Clex AI request counts, Driped scan stats) will populate once those projects expose admin endpoints. See each project's <em>Admin</em> tab.
         </p>
       </div>

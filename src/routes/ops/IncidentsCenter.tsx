@@ -52,7 +52,7 @@ export default function IncidentsCenter() {
       </div>
       <div className="panel p-5">
         <SectionTitle hint={`${incidents?.length ?? 0} total`}>Incidents</SectionTitle>
-        <ul className="divide-y divide-ink-600/40 text-sm">
+        <ul className="divide-rule text-sm">
           {(incidents ?? []).map((i) => (
             <li key={i.id} className="flex items-start justify-between gap-3 py-2">
               <div className="min-w-0">
@@ -61,7 +61,7 @@ export default function IncidentsCenter() {
                   <span className={i.status === "resolved" ? "pill-ok" : i.status === "monitoring" ? "pill-info" : "pill-err"}>{i.status}</span>{" "}
                   {i.title}
                 </p>
-                <p className="text-[11px] text-ink-300">{i.project_slug ?? "global"} · opened {timeAgo(i.opened_at)} {i.resolved_at ? `· resolved ${timeAgo(i.resolved_at)}` : ""}</p>
+                <p className="text-[11px] text-muted">{i.project_slug ?? "global"} · opened {timeAgo(i.opened_at)} {i.resolved_at ? `· resolved ${timeAgo(i.resolved_at)}` : ""}</p>
               </div>
               {i.status !== "resolved" ? (
                 <div className="flex gap-2">

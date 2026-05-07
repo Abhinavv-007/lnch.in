@@ -49,7 +49,7 @@ export default function OpsLayout() {
   if (!authChecked) {
     return (
       <div className="bg-stage flex min-h-screen items-center justify-center">
-        <div className="panel-soft px-6 py-4 text-sm text-ink-200">
+        <div className="panel-soft px-6 py-4 text-sm text-fg-soft">
           Verifying session…
         </div>
       </div>

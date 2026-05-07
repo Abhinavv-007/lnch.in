@@ -100,25 +100,25 @@ export default function OpsLogin() {
         <div className="mb-8 text-center">
           <div className="mx-auto mb-3 inline-flex items-center gap-2">
             <span className="relative inline-flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full animate-pulseGlow rounded-full bg-gilt-300" />
+              <span className="absolute inline-flex h-full w-full animate-pulseGlow rounded-full bg-accent" />
             </span>
             <span className="font-serif text-xl tracking-tight">
-              Launch<span className="text-gilt-300">Ops</span>
+              Launch<span className="text-accent">Ops</span>
             </span>
           </div>
           <h1 className="heading-display text-4xl">Operator console</h1>
-          <p className="mt-2 text-sm text-ink-200">
+          <p className="mt-2 text-sm text-fg-soft">
             Restricted. Authenticate to run the command center.
           </p>
         </div>
 
         <div className="panel relative overflow-hidden">
           <form onSubmit={submitSecret} className="space-y-4 p-5">
-            <label className="block text-xs uppercase tracking-[0.24em] text-ink-300">
+            <label className="block text-xs uppercase tracking-[0.24em] text-fg-soft">
               Admin secret
             </label>
             <div className="flex items-center gap-2">
-              <Lock className="h-4 w-4 text-ink-300" />
+              <Lock className="h-4 w-4 text-fg-soft" />
               <input
                 type="password"
                 autoComplete="current-password"
@@ -140,9 +140,9 @@ export default function OpsLogin() {
 
             {status.passkeysAvailable ? (
               <>
-                <div className="relative my-2 text-center text-[11px] uppercase tracking-[0.28em] text-ink-300">
-                  <span className="bg-ink-900 px-3">or</span>
-                  <div className="absolute inset-x-0 top-1/2 -z-10 h-px bg-ink-600/60" />
+                <div className="relative my-2 text-center text-[11px] uppercase tracking-[0.28em] text-fg-soft">
+                  <span className="bg-paper-soft px-3">or</span>
+                  <div className="absolute inset-x-0 top-1/2 -z-10 h-px [background-color:color-mix(in_oklab,var(--line-strong)_60%,transparent)]" />
                 </div>
                 <button
                   type="button"
@@ -156,14 +156,14 @@ export default function OpsLogin() {
             ) : null}
 
             {error ? (
-              <p className="text-xs text-red-300" role="alert">
+              <p className="text-xs signal-err" role="alert">
                 {error}
               </p>
             ) : null}
           </form>
         </div>
 
-        <p className="mt-6 text-center text-[11px] text-ink-300">
+        <p className="mt-6 text-center text-[11px] text-muted">
           lnch.in · LaunchOps · all admin actions are audited.
         </p>
       </div>

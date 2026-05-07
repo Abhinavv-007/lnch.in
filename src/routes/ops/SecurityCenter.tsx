@@ -20,14 +20,14 @@ export default function SecurityCenter() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="security" title="Security center" description="Secrets, passkeys, failed logins, integration permissions." />
-      <section className="grid gap-3 md:grid-cols-3">
+      <section className="poster-stagger grid gap-3 md:grid-cols-3">
         <StatCard label="Missing required secrets" value={missing.length} tone={missing.length ? "err" : "ok"} status={missing.length ? missing.map((m) => m.name).join(", ") : "All required secrets present"} />
         <StatCard label="Registered passkeys" value={data?.passkeys.count ?? "…"} tone={data && data.passkeys.count ? "ok" : "warn"} />
         <StatCard label="Recent failed logins" value={data?.recentFailures.length ?? "…"} tone={data && data.recentFailures.length ? "warn" : "ok"} />
       </section>
       <div className="panel p-5">
         <SectionTitle>Secret checklist</SectionTitle>
-        <ul className="divide-y divide-ink-600/40 text-sm">
+        <ul className="divide-rule text-sm">
           {(data?.secrets ?? []).map((s) => (
             <li key={s.name} className="flex items-center justify-between gap-3 py-2">
               <span className="font-mono text-xs">{s.name}</span>
@@ -40,7 +40,7 @@ export default function SecurityCenter() {
       </div>
       <div className="panel p-5">
         <SectionTitle>Integration permissions</SectionTitle>
-        <ul className="divide-y divide-ink-600/40 text-sm">
+        <ul className="divide-rule text-sm">
           {(data?.integrationPermissions ?? []).map((p) => (
             <li key={p.name} className="flex items-center justify-between gap-3 py-2">
               <span>{p.name}</span>
@@ -130,15 +130,15 @@ function PasskeysPanel() {
       <SectionTitle action={<button className="btn-primary" onClick={register} disabled={busy}>Register passkey</button>}>
         Passkeys
       </SectionTitle>
-      {error ? <p className="mb-2 text-xs text-red-300">{error}</p> : null}
-      <ul className="divide-y divide-ink-600/40 text-sm">
+      {error ? <p className="mb-2 text-xs signal-err">{error}</p> : null}
+      <ul className="divide-rule text-sm">
         {(list ?? []).map((p) => (
           <li key={p.id} className="flex items-center justify-between py-2">
             <span>{p.label ?? `Passkey #${p.id}`}</span>
             <button className="btn-danger text-xs" onClick={() => remove(p.id)}>Revoke</button>
           </li>
         ))}
-        {list && list.length === 0 ? <li className="py-2 text-ink-300">No passkeys registered yet.</li> : null}
+        {list && list.length === 0 ? <li className="py-2 text-fg-soft">No passkeys registered yet.</li> : null}
       </ul>
     </div>
   );

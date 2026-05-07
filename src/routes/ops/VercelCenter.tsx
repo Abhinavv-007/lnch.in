@@ -32,18 +32,18 @@ export default function VercelCenter() {
   return (
     <div className="space-y-6">
       <PageHeader eyebrow="vercel" title="Vercel" description={data?.team ? `Team ${data.team.name}` : "Projects, deployments and domains."} />
-      <section className="grid gap-3 md:grid-cols-3">
+      <section className="poster-stagger grid gap-3 md:grid-cols-3">
         <StatCard label="Projects" value={data?.projects.length ?? "…"} tone="gilt" />
         <StatCard label="Domains" value={data?.domains.length ?? "…"} tone="info" />
         <StatCard label="Deploys (24h)" value={data?.recentDeployments.length ?? "…"} tone="neutral" />
       </section>
       <div className="panel p-5">
         <SectionTitle>Projects</SectionTitle>
-        <ul className="divide-y divide-ink-600/40 text-sm">
+        <ul className="divide-rule text-sm">
           {(data?.projects ?? []).map((p) => (
             <li key={p.id} className="flex items-center justify-between py-2">
-              <span>{p.name} <span className="text-xs text-ink-300">{p.framework ?? ""}</span></span>
-              <span className="text-xs text-ink-300">
+              <span>{p.name} <span className="text-xs text-muted">{p.framework ?? ""}</span></span>
+              <span className="text-xs text-muted">
                 {p.latestDeployment ? `${p.latestDeployment.state} · ${timeAgo(p.latestDeployment.ts)}` : "—"}
               </span>
             </li>
@@ -52,11 +52,11 @@ export default function VercelCenter() {
       </div>
       <div className="panel p-5">
         <SectionTitle>Recent deployments</SectionTitle>
-        <ul className="divide-y divide-ink-600/40 text-sm">
+        <ul className="divide-rule text-sm">
           {(data?.recentDeployments ?? []).map((d, i) => (
             <li key={i} className="flex items-center justify-between py-2">
               <span>{d.project}</span>
-              <span className="flex items-center gap-2 text-xs text-ink-300">
+              <span className="flex items-center gap-2 text-xs text-muted">
                 <span className={d.state === "ready" ? "pill-ok" : d.state === "error" ? "pill-err" : "pill-warn"}>{d.state}</span>
                 {timeAgo(d.ts)}
               </span>
