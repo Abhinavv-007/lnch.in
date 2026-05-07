@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import CursorGlow from "./components/common/CursorGlow";
 import LandingPage from "./routes/public/Landing";
 import PublicProject from "./routes/public/PublicProject";
 import OpsLayout from "./routes/ops/OpsLayout";
@@ -24,7 +25,9 @@ import NotFound from "./routes/public/NotFound";
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <CursorGlow />
+      <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/projects/:slug" element={<PublicProject />} />
 
@@ -53,6 +56,7 @@ export default function App() {
       </Route>
 
       <Route path="*" element={<NotFound />} />
-    </Routes>
+      </Routes>
+    </>
   );
 }

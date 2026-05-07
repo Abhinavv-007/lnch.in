@@ -29,6 +29,7 @@ import HealthDot from "@/components/ops/HealthDot";
 import MissingIntegration from "@/components/ops/MissingIntegration";
 import StatCard from "@/components/ops/StatCard";
 import SectionTitle from "@/components/ops/SectionTitle";
+import DotPulse from "@/components/common/DotPulse";
 import {
   PROJECTS_BY_SLUG,
   PROJECT_DETAIL_SECTIONS,
@@ -372,7 +373,7 @@ function HealthSection({ project, detail }: { project: Project; detail: Detail |
       <div className="panel p-5">
         <SectionTitle hint={`${detail?.apis.length ?? 0} probes`}>Public probes</SectionTitle>
         {!detail ? (
-          <p className="text-sm text-fg-soft">Loading…</p>
+          <DotPulse label="loading" />
         ) : detail.apis.length === 0 ? (
           <p className="text-sm text-fg-soft">
             No health probes registered for this project. Add endpoints to the project registry in{" "}
@@ -561,7 +562,7 @@ function ChangelogSection({ project, detail }: { project: Project; detail: Detai
           Drafts &amp; releases
         </SectionTitle>
         {drafts === null ? (
-          <p className="text-sm text-fg-soft">Loading…</p>
+          <DotPulse label="loading" />
         ) : drafts.length === 0 ? (
           <p className="text-sm text-fg-soft">
             No changelog drafts for {project.name} yet. Generate one from{" "}
@@ -663,7 +664,7 @@ function TasksSection({ project }: { project: Project }) {
         Tasks scoped to {project.name}
       </SectionTitle>
       {tasks === null ? (
-        <p className="text-sm text-fg-soft">Loading…</p>
+        <DotPulse label="loading" />
       ) : tasks.length === 0 ? (
         <p className="text-sm text-fg-soft">
           No tasks scoped to this project yet. Add one from{" "}
@@ -741,7 +742,7 @@ function NotesSection({ project }: { project: Project }) {
         Notes scoped to {project.name}
       </SectionTitle>
       {notes === null ? (
-        <p className="text-sm text-fg-soft">Loading…</p>
+        <DotPulse label="loading" />
       ) : notes.length === 0 ? (
         <p className="text-sm text-fg-soft">
           No notes scoped to this project yet. Capture one from{" "}
@@ -947,7 +948,7 @@ function PanelSkeleton({ title }: { title: string }) {
   return (
     <div className="panel p-5">
       <SectionTitle>{title}</SectionTitle>
-      <p className="text-sm text-fg-soft">Loading…</p>
+      <DotPulse label="loading" />
     </div>
   );
 }

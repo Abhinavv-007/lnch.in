@@ -19,6 +19,7 @@ export default function PublicHeader() {
         <nav className="hidden gap-7 text-sm text-fg-soft md:flex">
           <Link to="/#projects" className="hover:text-fg">Projects</Link>
           <Link to="/#status" className="hover:text-fg">Status</Link>
+          <Link to="/#api" className="hover:text-fg">API</Link>
           <a
             href="https://github.com/Abhinavv-007"
             target="_blank"
@@ -27,16 +28,16 @@ export default function PublicHeader() {
           >
             GitHub
           </a>
-          <Link to="/ops" className="hover:text-accent">Operator</Link>
         </nav>
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Link
             to="/ops"
             className="inline-flex items-center gap-1.5 rounded-full border border-rule bg-paper-elev px-3.5 py-1.5 text-xs font-medium text-fg transition hover:border-accent hover:text-accent"
+            aria-label="Sign in to the operator console"
           >
             <Lock className="h-3 w-3" />
-            Sign in
+            Operator sign in
           </Link>
         </div>
       </div>

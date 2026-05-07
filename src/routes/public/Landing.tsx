@@ -20,6 +20,8 @@ import StatusTerminal from "@/components/public/StatusTerminal";
 import LatencyStrip from "@/components/public/LatencyStrip";
 import CommitTicker, { type Commit } from "@/components/public/CommitTicker";
 import ProjectCard, { type ProjectSummary } from "@/components/public/ProjectCard";
+import HeatmapPoster, { type HeatmapData } from "@/components/public/HeatmapPoster";
+import { useHashScroll } from "@/lib/useHashScroll";
 
 type ProjectsResponse = {
   generatedAt: number;
@@ -55,22 +57,26 @@ async function safeJson<T>(url: string): Promise<T | null> {
 }
 
 export default function LandingPage() {
+  useHashScroll();
   const [projects, setProjects] = useState<ProjectsResponse | null>(null);
   const [probes, setProbes] = useState<ProbesResponse | null>(null);
   const [commits, setCommits] = useState<CommitsResponse | null>(null);
+  const [heatmap, setHeatmap] = useState<HeatmapData | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [p, q, c] = await Promise.all([
+      const [p, q, c, h] = await Promise.all([
         safeJson<ProjectsResponse>("/api/public/projects"),
         safeJson<ProbesResponse>("/api/public/probes"),
         safeJson<CommitsResponse>("/api/public/commits"),
+        safeJson<HeatmapData>("/api/public/heatmap"),
       ]);
       if (cancelled) return;
       setProjects(p);
       setProbes(q);
       setCommits(c);
+      setHeatmap(h);
     })();
     return () => {
       cancelled = true;
@@ -189,6 +195,11 @@ export default function LandingPage() {
             <span>last 24 hours</span>
           </div>
         </div>
+      </section>
+
+      {/* Heatmap — RPS by day × hour */}
+      <section id="heatmap" className="mx-auto max-w-6xl px-6 pb-14">
+        <HeatmapPoster data={heatmap} />
       </section>
 
       {/* Projects */}
