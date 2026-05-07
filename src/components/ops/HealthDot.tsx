@@ -2,12 +2,12 @@ import { cn } from "@/lib/cn";
 
 export type HealthState = "ok" | "warn" | "err" | "unknown" | "missing";
 
-const COLOR: Record<HealthState, string> = {
-  ok: "bg-emerald-400 text-emerald-300",
-  warn: "bg-amber-400 text-amber-300",
-  err: "bg-red-400 text-red-300",
-  unknown: "bg-ink-300 text-ink-300",
-  missing: "bg-ink-400 text-ink-300",
+const COLOR: Record<HealthState, { dot: string; text: string }> = {
+  ok: { dot: "bg-[var(--signal-ok)]", text: "text-[var(--signal-ok)]" },
+  warn: { dot: "bg-[var(--signal-warn)]", text: "text-[var(--signal-warn)]" },
+  err: { dot: "bg-[var(--signal-err)]", text: "text-[var(--signal-err)]" },
+  unknown: { dot: "bg-muted", text: "text-muted" },
+  missing: { dot: "bg-muted", text: "text-muted" },
 };
 
 export default function HealthDot({
@@ -19,9 +19,10 @@ export default function HealthDot({
   label?: string;
   className?: string;
 }) {
+  const c = COLOR[state];
   return (
-    <span className={cn("inline-flex items-center gap-1.5 text-xs", COLOR[state], className)}>
-      <span className={cn("inline-block h-1.5 w-1.5 rounded-full glow-pulse", COLOR[state])} />
+    <span className={cn("inline-flex items-center gap-1.5 text-xs", c.text, className)}>
+      <span className={cn("inline-block h-1.5 w-1.5 rounded-full glow-pulse", c.dot)} />
       {label}
     </span>
   );

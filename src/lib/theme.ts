@@ -170,19 +170,14 @@ function runOverlayReveal(next: Theme, x: number, y: number, radius: number) {
 }
 
 /**
- * Force the `/ops` console to always render in dark mode. The legacy ops
- * palette is dark-only; a light-mode preference saved on the public surface
- * shouldn't bleed into the operator UI.
+ * Historically the `/ops` console pinned itself to dark mode because the
+ * operator palette was dark-only. The poster design system retones cleanly
+ * for both light and dark themes via CSS custom properties, so the ops
+ * surface now respects the user's saved theme like the public surface does.
+ *
+ * The function is kept (returning a no-op cleanup) so existing call sites
+ * continue to work; remove once all call sites are migrated.
  */
 export function pinThemeForOps(): () => void {
-  if (typeof document === "undefined") return () => {};
-  const root = document.documentElement;
-  const prevAttr = root.getAttribute("data-theme");
-  const prevHasDark = root.classList.contains("dark");
-  root.removeAttribute("data-theme");
-  root.classList.add("dark");
-  return () => {
-    if (prevAttr) root.setAttribute("data-theme", prevAttr);
-    if (!prevHasDark) root.classList.remove("dark");
-  };
+  return () => {};
 }

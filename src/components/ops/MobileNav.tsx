@@ -27,7 +27,7 @@ export default function MobileNav() {
   return (
     <nav
       aria-label="LaunchOps mobile navigation"
-      className="fixed inset-x-0 bottom-0 z-30 flex items-stretch border-t border-ink-600/40 bg-ink-950/85 px-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-md lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 flex items-stretch border-t border-rule bg-paper-deep/90 px-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-md lg:hidden"
     >
       {ITEMS.map(({ to, icon: Icon, label }) => (
         <NavLink
@@ -37,8 +37,8 @@ export default function MobileNav() {
             cn(
               "flex flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl py-2 text-[10px] font-medium tracking-wide transition",
               isActive
-                ? "text-gilt-200 bg-ink-800/70 shadow-gilt-sm"
-                : "text-ink-300 hover:text-ink-100",
+                ? "text-accent bg-paper-elev shadow-gilt-sm"
+                : "text-fg-soft hover:text-fg",
             )
           }
         >

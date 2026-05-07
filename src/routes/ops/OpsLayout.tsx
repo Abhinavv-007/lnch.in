@@ -5,7 +5,6 @@ import MobileNav from "@/components/ops/MobileNav";
 import Topbar from "@/components/ops/Topbar";
 import CommandMenu from "@/components/ops/CommandMenu";
 import { api, ApiError } from "@/lib/api";
-import { pinThemeForOps } from "@/lib/theme";
 
 type Session = { ok: boolean };
 
@@ -33,12 +32,6 @@ export default function OpsLayout() {
       cancelled = true;
     };
   }, [location.pathname, location.search, navigate]);
-
-  // Force the legacy ink palette while inside /ops — light mode is intentionally
-  // a public-surface-only feature.
-  useEffect(() => {
-    return pinThemeForOps();
-  }, []);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

@@ -4,6 +4,12 @@
  * The landing renders fully static if the public APIs are unreachable; once
  * `/api/public/projects` and `/api/public/commits` resolve we hydrate live
  * status, latency, and the recent-commits ticker.
+ *
+ * Visually this page is a single editorial poster — every section is a
+ * `.poster-card` with scalloped edges, dotted paper grid background, mono
+ * eyebrows, serif italic accents, and a footer strip. The reference posters
+ * (heatmap, status, flow, uptime) all live inside this same system rather
+ * than ad-hoc cards floating on a generic SaaS background.
  */
 import { useEffect, useMemo, useState } from "react";
 import { Lock, Activity, Github } from "lucide-react";
@@ -93,21 +99,20 @@ export default function LandingPage() {
       <PublicHeader />
 
       {/* Hero — poster ticket */}
-      <section className="relative mx-auto max-w-6xl px-6 pt-20 pb-16 md:pt-28 md:pb-20">
-        <div className="poster-card">
+      <section className="relative mx-auto max-w-6xl px-6 pt-20 pb-12 md:pt-28 md:pb-16">
+        <div className="poster-card poster-live">
           <div className="flex flex-wrap items-center gap-3 mb-7">
             <span className="poster-stamp">
-              <span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
+              <span aria-hidden className="poster-bullet" />
               The launch hub · vol. 01
             </span>
-            <p className="text-[0.7rem] uppercase tracking-[0.32em] text-fg-soft font-mono">
+            <p className="poster-eyebrow text-fg-soft">
               where projects go live
             </p>
           </div>
-          <h1 className="font-serif text-5xl leading-[1.05] tracking-tight text-fg md:text-7xl lg:text-8xl">
+          <h1 className="poster-headline">
             Ship the work.
-            <br />
-            <span className="cursive-accent text-accent">Run the rest.</span>
+            <span className="accent">Run the rest.</span>
           </h1>
           <p className="mt-6 max-w-2xl text-base leading-relaxed text-fg-soft md:text-lg">
             lnch.in is the public face — and the operator console — for every
@@ -115,27 +120,21 @@ export default function LandingPage() {
             history. Everything is open.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
-            <a
-              href="#projects"
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-paper transition hover:opacity-90"
-              style={{ color: "var(--bg)" }}
-            >
+            <a href="#projects" className="poster-button poster-button--primary">
               Browse projects
             </a>
-            <Link
-              to="/ops"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-rule bg-paper-elev px-5 py-2.5 text-sm font-medium text-fg transition hover:border-accent"
-            >
-              <Lock className="h-4 w-4" /> Operator console
+            <Link to="/ops" className="poster-button">
+              <Lock className="h-3.5 w-3.5" /> Operator console
             </Link>
-            <a
-              href="#api"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-rule bg-paper-elev px-5 py-2.5 text-sm font-medium text-fg transition hover:border-accent"
-            >
-              <Activity className="h-4 w-4" /> Public API
+            <a href="#api" className="poster-button">
+              <Activity className="h-3.5 w-3.5" /> Public API
             </a>
           </div>
-          <div className="mt-10 poster-divider">
+          <div className="poster-footer-strip mt-10">
+            <span className="poster-footer-strip__brand">
+              <span className="poster-bullet" />
+              LNCH.IN
+            </span>
             <span>est. 2025</span>
             <span>edition · live</span>
           </div>
@@ -144,54 +143,69 @@ export default function LandingPage() {
 
       {/* Live status terminal */}
       <section id="status" className="mx-auto max-w-6xl px-6 pb-10">
-        <div className="mb-4 flex items-end justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-accent">live</p>
-            <h2 className="font-serif mt-1.5 text-2xl tracking-tight text-fg md:text-3xl">
-              <span className="cursive-accent text-accent">Status</span> — every project, right now
-            </h2>
-          </div>
-          <p className="hidden text-xs text-fg-soft md:block">
-            data via <code className="text-accent">/api/public/projects</code>
-          </p>
-        </div>
+        <PosterHeading
+          eyebrow="live"
+          headline={
+            <>
+              <span className="accent">Status</span>
+              <span>—</span>
+              every project, right now
+            </>
+          }
+          aside={
+            <>
+              data via <code className="text-accent">/api/public/projects</code>
+            </>
+          }
+        />
         <StatusTerminal projects={projects?.projects ?? null} />
       </section>
 
-      {/* Latency strip */}
+      {/* Latency strip — uptime poster */}
       <section className="mx-auto max-w-6xl px-6 pb-12">
-        <div className="paper-panel p-5">
-          <div className="flex items-center justify-between gap-4">
+        <div className="poster-card poster-card--sm">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-accent">latency · last 24h</p>
-              <p className="mt-1.5 font-mono text-xl text-fg">
+              <p className="poster-eyebrow">latency · last 24h</p>
+              <p className="mt-2 font-serif text-3xl text-fg">
                 {aggregateP95 != null ? `${aggregateP95}ms` : "—"}{" "}
-                <span className="text-xs text-muted">avg p95 across {probes?.probes?.length ?? 0} probes</span>
+                <span className="font-mono text-xs uppercase tracking-[0.28em] text-muted">
+                  avg p95 across {probes?.probes?.length ?? 0} probes
+                </span>
               </p>
             </div>
-            <p className="hidden text-xs text-fg-soft md:block">
+            <p className="hidden text-xs uppercase tracking-[0.28em] text-muted md:block">
               every red tick is a failed probe in the last 24h
             </p>
           </div>
-          <div className="mt-4">
+          <div className="mt-5">
             <LatencyStrip points={allLatencyPoints} />
+          </div>
+          <div className="poster-footer-strip">
+            <span className="poster-footer-strip__brand">
+              <span className="poster-bullet" />
+              LNCH.IN
+            </span>
+            <span>last 24 hours</span>
           </div>
         </div>
       </section>
 
       {/* Projects */}
       <section id="projects" className="mx-auto max-w-6xl px-6 pb-16">
-        <div className="mb-8 flex items-end justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-accent">the launch slate</p>
-            <h2 className="font-serif mt-1.5 text-3xl tracking-tight text-fg md:text-4xl">
-              Projects in <span className="cursive-accent text-accent">flight</span>
-            </h2>
-          </div>
-          <span className="hidden text-xs text-fg-soft md:inline">
-            {projects?.counts.total ?? 0} active · {projects?.counts.healthy ?? 0} healthy
-          </span>
-        </div>
+        <PosterHeading
+          eyebrow="the launch slate"
+          headline={
+            <>
+              Projects in <span className="accent">flight</span>
+            </>
+          }
+          aside={
+            <>
+              {projects?.counts.total ?? 0} active · {projects?.counts.healthy ?? 0} healthy
+            </>
+          }
+        />
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {(projects?.projects ?? PLACEHOLDER_PROJECTS).map((p) => (
             <li key={p.slug}>
@@ -203,33 +217,35 @@ export default function LandingPage() {
 
       {/* Commit ticker */}
       <section className="mx-auto max-w-6xl px-6 pb-16">
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-accent">commit feed</p>
-            <h2 className="font-serif mt-1.5 text-2xl tracking-tight text-fg">
-              What's <span className="cursive-accent text-accent">shipping</span> right now
-            </h2>
-          </div>
-          <a
-            href="https://github.com/Abhinavv-007"
-            target="_blank"
-            rel="noreferrer"
-            className="hidden items-center gap-1 text-xs text-fg-soft hover:text-accent md:inline-flex"
-          >
-            <Github className="h-3 w-3" /> all repos
-          </a>
-        </div>
+        <PosterHeading
+          eyebrow="commit feed"
+          headline={
+            <>
+              What's <span className="accent">shipping</span> right now
+            </>
+          }
+          aside={
+            <a
+              href="https://github.com/Abhinavv-007"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 hover:text-accent"
+            >
+              <Github className="h-3 w-3" /> all repos
+            </a>
+          }
+        />
         <CommitTicker commits={commits?.commits ?? null} />
       </section>
 
       {/* Public API banner */}
       <section id="api" className="mx-auto max-w-6xl px-6 pb-24">
-        <div className="paper-panel overflow-hidden">
-          <div className="grid gap-0 md:grid-cols-2">
-            <div className="p-6 md:p-8">
-              <p className="text-xs uppercase tracking-[0.3em] text-accent">public API</p>
-              <h2 className="font-serif mt-2 text-3xl tracking-tight text-fg md:text-4xl">
-                Run it from your <span className="cursive-accent text-accent">terminal</span>
+        <div className="poster-card overflow-hidden">
+          <div className="grid gap-6 md:grid-cols-2 md:gap-8">
+            <div>
+              <p className="poster-eyebrow">public API</p>
+              <h2 className="poster-headline poster-headline--md mt-2">
+                Run it from your <span className="accent">terminal</span>
               </h2>
               <p className="mt-4 max-w-md text-sm leading-relaxed text-fg-soft">
                 Every project exposes a <code className="text-accent">/api/health</code> and{" "}
@@ -237,14 +253,14 @@ export default function LandingPage() {
                 cacheable. Hit them from CI, dashboards, or the command line.
               </p>
               <div className="mt-5 flex flex-wrap gap-2 text-xs">
-                <span className="paper-pill"><code>GET /api/public/projects</code></span>
-                <span className="paper-pill"><code>GET /api/public/projects/:slug</code></span>
-                <span className="paper-pill"><code>GET /api/public/probes</code></span>
-                <span className="paper-pill"><code>GET /api/public/commits</code></span>
+                <span className="poster-stamp"><code>GET /api/public/projects</code></span>
+                <span className="poster-stamp"><code>GET /api/public/projects/:slug</code></span>
+                <span className="poster-stamp"><code>GET /api/public/probes</code></span>
+                <span className="poster-stamp"><code>GET /api/public/commits</code></span>
               </div>
             </div>
-            <div className="border-t border-rule md:border-l md:border-t-0">
-              <pre className="terminal m-4 overflow-x-auto rounded-xl p-4 md:m-6">
+            <div className="md:border-l md:border-rule md:pl-6">
+              <pre className="terminal overflow-x-auto rounded-xl p-4">
                 <code className="block whitespace-pre">
                   <span className="term-prompt">$</span>{" "}
                   <span className="term-cmd">curl -s https://lnch.in/api/public/projects | jq '.counts'</span>
@@ -273,6 +289,32 @@ export default function LandingPage() {
 
       <PublicFooter />
     </main>
+  );
+}
+
+/**
+ * Section heading rendered in the poster style — eyebrow + serif italic
+ * headline + optional right-aligned aside.
+ */
+function PosterHeading({
+  eyebrow,
+  headline,
+  aside,
+}: {
+  eyebrow: string;
+  headline: React.ReactNode;
+  aside?: React.ReactNode;
+}) {
+  return (
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+      <div className="min-w-0">
+        <p className="poster-eyebrow">{eyebrow}</p>
+        <h2 className="poster-headline poster-headline--md mt-2">{headline}</h2>
+      </div>
+      {aside ? (
+        <p className="hidden text-xs uppercase tracking-[0.28em] text-muted md:block">{aside}</p>
+      ) : null}
+    </div>
   );
 }
 
