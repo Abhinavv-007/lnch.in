@@ -89,45 +89,56 @@ export default function LandingPage() {
   }, [probes]);
 
   return (
-    <main className="bg-stage min-h-screen">
+    <main className="bg-paper-grid min-h-screen">
       <PublicHeader />
 
-      {/* Hero */}
-      <section className="relative mx-auto max-w-6xl px-6 pt-20 pb-12 md:pt-32 md:pb-16">
-        <div className="absolute inset-x-0 top-0 mx-auto h-px max-w-[80%] bg-gradient-to-r from-transparent via-accent to-transparent opacity-60" />
-        <p className="mb-5 text-xs uppercase tracking-[0.3em] text-accent">
-          where projects go live
-        </p>
-        <h1 className="font-serif text-5xl leading-[1.05] tracking-tight text-fg md:text-7xl lg:text-8xl">
-          Ship the work.
-          <br />
-          <span className="cursive-accent text-accent">Run the rest.</span>
-        </h1>
-        <p className="mt-6 max-w-2xl text-base leading-relaxed text-fg-soft md:text-lg">
-          lnch.in is the public face — and the operator console — for every
-          product I build. Live status, public APIs, source code, deploy
-          history. Everything is open.
-        </p>
-        <div className="mt-9 flex flex-wrap gap-3">
-          <a
-            href="#projects"
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-paper transition hover:opacity-90"
-            style={{ color: "var(--bg)" }}
-          >
-            Browse projects
-          </a>
-          <Link
-            to="/ops"
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-rule bg-paper-elev px-5 py-2.5 text-sm font-medium text-fg transition hover:border-accent"
-          >
-            <Lock className="h-4 w-4" /> Operator console
-          </Link>
-          <a
-            href="#api"
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-rule bg-paper-elev px-5 py-2.5 text-sm font-medium text-fg transition hover:border-accent"
-          >
-            <Activity className="h-4 w-4" /> Public API
-          </a>
+      {/* Hero — poster ticket */}
+      <section className="relative mx-auto max-w-6xl px-6 pt-20 pb-16 md:pt-28 md:pb-20">
+        <div className="poster-card">
+          <div className="flex flex-wrap items-center gap-3 mb-7">
+            <span className="poster-stamp">
+              <span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-accent" />
+              The launch hub · vol. 01
+            </span>
+            <p className="text-[0.7rem] uppercase tracking-[0.32em] text-fg-soft font-mono">
+              where projects go live
+            </p>
+          </div>
+          <h1 className="font-serif text-5xl leading-[1.05] tracking-tight text-fg md:text-7xl lg:text-8xl">
+            Ship the work.
+            <br />
+            <span className="cursive-accent text-accent">Run the rest.</span>
+          </h1>
+          <p className="mt-6 max-w-2xl text-base leading-relaxed text-fg-soft md:text-lg">
+            lnch.in is the public face — and the operator console — for every
+            product I build. Live status, public APIs, source code, deploy
+            history. Everything is open.
+          </p>
+          <div className="mt-9 flex flex-wrap gap-3">
+            <a
+              href="#projects"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-paper transition hover:opacity-90"
+              style={{ color: "var(--bg)" }}
+            >
+              Browse projects
+            </a>
+            <Link
+              to="/ops"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-rule bg-paper-elev px-5 py-2.5 text-sm font-medium text-fg transition hover:border-accent"
+            >
+              <Lock className="h-4 w-4" /> Operator console
+            </Link>
+            <a
+              href="#api"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-rule bg-paper-elev px-5 py-2.5 text-sm font-medium text-fg transition hover:border-accent"
+            >
+              <Activity className="h-4 w-4" /> Public API
+            </a>
+          </div>
+          <div className="mt-10 poster-divider">
+            <span>est. 2025</span>
+            <span>edition · live</span>
+          </div>
         </div>
       </section>
 
