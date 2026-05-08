@@ -2,27 +2,26 @@ import { Activity } from "lucide-react";
 import type { CSSProperties } from "react";
 
 /**
- * Public traffic heatmap (RPS by day-of-week × hour-of-day, last 24h).
+ * Public traffic heatmap (events by day-of-week × hour-of-day, last 7 days).
  *
- * The visual is the headline poster of the public surface — scalloped
- * ticket border, dotted paper grid, serif italic accent, mono day/hour
- * labels, gold legend chips, and a peak/total summary strip.
+ * Sourced from real LaunchOps event tables in D1 — every health probe and
+ * every audit event lights up the corresponding cell. Cells start small
+ * and accumulate; the moment any of the project APIs receive traffic and
+ * pipes it into D1, the grid grows.
  *
- * `data` is `null` while the public API is still loading. When the public
- * API resolves with `{ available: false }` (e.g. probe history not wired
- * yet), we render an honest "awaiting" empty state with a chip listing the
- * env vars that need to be set, and the visible legend so the structure is
- * obvious without any fabricated numbers.
+ * The visual is one of the headline posters of the public surface —
+ * scalloped ticket border, dotted paper grid, serif italic accent, mono
+ * day/hour labels, gold legend chips, and a peak/total summary strip.
  */
 export type HeatmapData = {
-  /** 7 rows (Mon..Sun) × 24 cols (00..23) of RPS values. */
+  /** 7 rows (Mon..Sun) × 24 cols (00..23) of event-count values. */
   cells: number[][];
   peak?: { day: string; hour: number; rps: number } | null;
   totalRequests?: number | null;
-  /** False = backend isn't wired yet; show honest empty state. */
+  /** True once any real event has landed in the window (always real data). */
   available: boolean;
-  needs?: string[];
-  reason?: string;
+  windowDays?: number;
+  sources?: { probes: number; audits: number };
 };
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
@@ -71,8 +70,6 @@ const EMPTY_GRID: number[][] = Array.from({ length: 7 }, () =>
 
 export default function HeatmapPoster({ data }: { data: HeatmapData | null }) {
   const cells = data?.cells?.length === 7 ? data.cells : EMPTY_GRID;
-  const empty =
-    !data || !data.available || cells.every((row) => row.every((v) => v <= 0));
 
   return (
     <div className="poster-card relative">
@@ -83,7 +80,7 @@ export default function HeatmapPoster({ data }: { data: HeatmapData | null }) {
             The <span className="accent">heatmap.</span>
           </h3>
           <p className="mt-3 max-w-md text-sm leading-relaxed text-fg-soft">
-            Requests per second (RPS) by day and hour, last 24 hours.
+            Live API events by day and hour. Updates as soon as any project's API is hit.
           </p>
         </div>
         <span className="poster-stamp">
@@ -174,36 +171,12 @@ export default function HeatmapPoster({ data }: { data: HeatmapData | null }) {
         </div>
       </div>
 
-      {empty ? (
-        <div className="mt-6 rounded-xl border border-dashed border-rule px-4 py-3 text-xs leading-relaxed text-fg-soft">
-          <span className="poster-eyebrow text-[var(--signal-warn)]">
-            awaiting traffic data
-          </span>
-          <span className="ml-2">
-            {data?.reason ??
-              "Heatmap hydrates once probe history + Cloudflare zone analytics are wired."}
-          </span>
-          {data?.needs?.length ? (
-            <span className="mt-2 flex flex-wrap items-center gap-1.5">
-              <span className="font-mono uppercase tracking-[0.22em] text-muted">
-                needs
-              </span>
-              {data.needs.map((n) => (
-                <span key={n} className="poster-stamp poster-stamp--warn">
-                  {n}
-                </span>
-              ))}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
-
       <div className="poster-footer-strip mt-6">
         <span className="poster-footer-strip__brand">
           <span className="poster-bullet" />
           LNCH.IN
         </span>
-        <span>last 24 hours</span>
+        <span>{`last ${data?.windowDays ?? 7} days`}</span>
       </div>
     </div>
   );

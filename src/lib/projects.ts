@@ -130,7 +130,7 @@ export const PROJECTS: Project[] = [
     repo: "Abhinavv-007/Portfolio",
     blurb: "abhnv.in — case studies, research, the work behind the launches.",
     accent: "text-violet-300",
-    health: ["https://abhnv.in/sitemap.xml"],
+    health: ["https://abhnv.in/api/health"],
     adminSecretEnv: "LAUNCHOPS_ADMIN_SECRET",
   },
 ];

@@ -883,32 +883,75 @@ button, a {
 ::view-transition-new(root) { z-index: 1; }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Cursor-following radial highlight.
+   Cursor-following per-particle highlight.
+
+   The page already paints a uniform dotted paper-grid via `.bg-paper-grid`.
+   We layer a SECOND copy of that exact grid (same 14px spacing, same dot
+   geometry) on top of the page, but rendered with a much brighter dot
+   colour, then we mask it to a radial spot centred at the cursor. The
+   visible effect is that the individual dots near the cursor brighten —
+   never the empty paper between them — while the rest of the page keeps
+   its subtle, uniform texture. `mix-blend-mode: plus-lighter` makes the
+   bright dots add onto the base layer for a 3D-feel premium glow.
 
    <CursorGlow /> writes the pointer position to `--cursor-x` / `--cursor-y`
-   on <html>. The fixed-position overlay reads those vars and renders a
-   subtle additive radial gradient via `mix-blend-mode: plus-lighter` so it
-   brightens the dotted paper grid near the cursor without occluding text.
+   on <html>; we read both here and follow with a tight RAF flush.
    ─────────────────────────────────────────────────────────────────────── */
 :root {
-  --cursor-x: 50vw;
-  --cursor-y: 50vh;
-  --cursor-glow: rgba(217, 197, 127, 0.10);
+  --cursor-x: -1000px;
+  --cursor-y: -1000px;
+  --cursor-radius: 220px;
+  --cursor-particle:        rgba(255, 235, 175, 0.95);
+  --cursor-particle-soft:   rgba(255, 220, 150, 0.45);
 }
 :root[data-theme="light"] {
-  --cursor-glow: rgba(138, 106, 45, 0.06);
+  --cursor-particle:        rgba(170, 130, 50, 0.78);
+  --cursor-particle-soft:   rgba(170, 130, 50, 0.32);
 }
 .cursor-glow {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;
-  background: radial-gradient(
-    340px circle at var(--cursor-x) var(--cursor-y),
-    var(--cursor-glow),
-    transparent 70%
+  /* Bright duplicate of the paper-grid dot pattern. Same 14px spacing as
+     `.bg-paper-grid` so dots align exactly. */
+  background-image:
+    radial-gradient(var(--cursor-particle) 1.2px, transparent 1.6px);
+  background-size: 14px 14px;
+  background-position: 0 0;
+  /* Mask so only dots inside the cursor circle are visible. The mask
+     fades from solid (cursor centre) to transparent at the radius edge,
+     producing a soft falloff without a hard ring. */
+  -webkit-mask: radial-gradient(
+    var(--cursor-radius) circle at var(--cursor-x) var(--cursor-y),
+    rgb(0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.55) 45%,
+    rgba(0, 0, 0, 0) 100%
+  );
+          mask: radial-gradient(
+    var(--cursor-radius) circle at var(--cursor-x) var(--cursor-y),
+    rgb(0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.55) 45%,
+    rgba(0, 0, 0, 0) 100%
   );
   mix-blend-mode: plus-lighter;
+  transition: opacity 240ms ease;
+}
+/* Subtle warm halo behind the per-particle highlight — gives the cursor
+   a soft, premium aura without washing out text. Lower opacity than
+   the particle layer so it never dominates. */
+.cursor-glow::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    calc(var(--cursor-radius) * 1.6) circle at var(--cursor-x) var(--cursor-y),
+    var(--cursor-particle-soft),
+    transparent 70%
+  );
+  opacity: 0.55;
+  mix-blend-mode: plus-lighter;
+  pointer-events: none;
 }
 /* Make sure interactive content stacks above the glow on every page. */
 .poster-card,
@@ -986,6 +1029,67 @@ main > div,
   letter-spacing: 0.18em;
   color: var(--text-soft);
   text-align: center;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   GitHub contribution heatmap (53 weeks × 7 days).
+
+   Five tier colours that read against both light and dark mode. Cells use
+   the same `--cell` custom property pattern as the API heatmap above so
+   the per-cell colour is set inline by the React component.
+   ─────────────────────────────────────────────────────────────────────── */
+:root {
+  --gh-tier-0: rgba(217, 197, 127, 0.10);
+  --gh-tier-1: rgba(105, 168, 116, 0.50);
+  --gh-tier-2: rgba(60, 158, 100, 0.65);
+  --gh-tier-3: rgba(38, 138, 80, 0.78);
+  --gh-tier-4: rgba(20, 110, 60, 0.92);
+}
+:root[data-theme="light"] {
+  --gh-tier-0: rgba(138, 106, 45, 0.07);
+  --gh-tier-1: rgba(126, 188, 130, 0.62);
+  --gh-tier-2: rgba(70, 165, 100, 0.78);
+  --gh-tier-3: rgba(35, 135, 75, 0.86);
+  --gh-tier-4: rgba(20, 100, 55, 0.94);
+}
+.gh-contrib {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.gh-contrib__ticks,
+.gh-contrib__row {
+  display: grid;
+  grid-template-columns: 36px repeat(53, 1fr);
+  gap: 3px;
+  align-items: center;
+}
+.gh-contrib__ticks { margin-bottom: 2px; height: 14px; }
+.gh-contrib__tick {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-soft);
+}
+.gh-contrib__day {
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-soft);
+  text-align: right;
+  padding-right: 6px;
+}
+.gh-contrib__cell {
+  aspect-ratio: 1 / 1;
+  border-radius: 3px;
+  background: var(--cell, var(--gh-tier-0));
+  transition: transform 180ms ease, filter 180ms ease;
+}
+.gh-contrib__cell:hover {
+  filter: brightness(1.18);
+  transform: scale(1.16);
 }
 
 /* Reduced-motion: kill the looping/transformy animations. */
