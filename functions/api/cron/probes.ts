@@ -22,6 +22,7 @@
  */
 import { type Env, err, json, nowSec, timingSafeEqual } from "../../_lib/env";
 import { runHealthProbes } from "../../_lib/probes";
+import { prunePublicAudit } from "../../_lib/publicAudit";
 
 function extractToken(request: Request): string | null {
   const auth = request.headers.get("authorization") ?? "";
@@ -46,12 +47,24 @@ const handler: PagesFunction<Env> = async ({ request, env }) => {
   const elapsedMs = Date.now() - t0;
   const ok = results.filter((r) => r.ok).length;
 
+  // Opportunistic housekeeping: trim public-audit rows older than 30d on
+  // every cron sweep so the table never grows unbounded. Errors here are
+  // swallowed (the helper already does so) — they never affect the probe
+  // sweep's success status.
+  let prunedRows = 0;
+  try {
+    prunedRows = await prunePublicAudit(env, 30);
+  } catch {
+    prunedRows = 0;
+  }
+
   return json({
     ok: true,
     generatedAt: nowSec(),
     elapsedMs,
     counts: { total: results.length, ok, down: results.length - ok },
     results,
+    housekeeping: { prunedPublicAuditRows: prunedRows },
   });
 };
 
