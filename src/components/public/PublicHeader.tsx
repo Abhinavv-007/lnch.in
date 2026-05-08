@@ -33,7 +33,7 @@ export default function PublicHeader() {
         <nav className="hidden gap-5 text-sm text-fg-soft lg:flex">
           <Link to="/#projects" className="hover:text-fg">Projects</Link>
           <Link to="/#status" className="hover:text-fg">Status</Link>
-          <Link to="/#api" className="hover:text-fg">API</Link>
+          <Link to="/developers" className="hover:text-fg">Developers</Link>
           <a
             href="https://github.com/Abhinavv-007"
             target="_blank"
