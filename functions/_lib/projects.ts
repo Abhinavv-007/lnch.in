@@ -100,6 +100,7 @@ export const PROJECTS: ServerProject[] = [
     name: "Portfolio",
     repo: "Abhinavv-007/Portfolio",
     site: "https://abhnv.in",
+    health: ["https://abhnv.in/api/health"],
     firebaseEnvPrefix: "FIREBASE_PORTFOLIO",
     adminSecretEnv: "LAUNCHOPS_ADMIN_SECRET",
   },
