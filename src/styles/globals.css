@@ -450,6 +450,11 @@ button, a {
   color: var(--text);
   font-size: clamp(2.5rem, 5vw, 4.5rem);
   font-weight: 500;
+  /* Lining + tabular numerals so digit-letter pairs (e.g. "792ms",
+     "1,094") sit on a uniform baseline and the numerals are full-height
+     not old-style. */
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum", "tnum";
 }
 .poster-headline .accent {
   font-style: italic;
@@ -562,6 +567,8 @@ button, a {
   align-items: baseline;
   gap: 0.35ch;
   flex-wrap: wrap;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum", "tnum";
 }
 .poster-stat__unit {
   font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
@@ -883,77 +890,13 @@ button, a {
 ::view-transition-new(root) { z-index: 1; }
 
 /* ──────────────────────────────────────────────────────────────────────────
-   Cursor-following per-particle highlight.
+   Background particles.
 
-   The page already paints a uniform dotted paper-grid via `.bg-paper-grid`.
-   We layer a SECOND copy of that exact grid (same 14px spacing, same dot
-   geometry) on top of the page, but rendered with a much brighter dot
-   colour, then we mask it to a radial spot centred at the cursor. The
-   visible effect is that the individual dots near the cursor brighten —
-   never the empty paper between them — while the rest of the page keeps
-   its subtle, uniform texture. `mix-blend-mode: plus-lighter` makes the
-   bright dots add onto the base layer for a 3D-feel premium glow.
-
-   <CursorGlow /> writes the pointer position to `--cursor-x` / `--cursor-y`
-   on <html>; we read both here and follow with a tight RAF flush.
+   <ParticleField /> paints a canvas at z-0 covering the viewport. We make
+   sure interactive content sits above it on every page so clicks always
+   land on the intended element rather than the canvas. The canvas itself
+   has `pointer-events: none` so this is mostly belt-and-braces.
    ─────────────────────────────────────────────────────────────────────── */
-:root {
-  --cursor-x: -1000px;
-  --cursor-y: -1000px;
-  --cursor-radius: 220px;
-  --cursor-particle:        rgba(255, 235, 175, 0.95);
-  --cursor-particle-soft:   rgba(255, 220, 150, 0.45);
-}
-:root[data-theme="light"] {
-  --cursor-particle:        rgba(170, 130, 50, 0.78);
-  --cursor-particle-soft:   rgba(170, 130, 50, 0.32);
-}
-.cursor-glow {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  /* Bright duplicate of the paper-grid dot pattern. Same 14px spacing as
-     `.bg-paper-grid` so dots align exactly. */
-  background-image:
-    radial-gradient(var(--cursor-particle) 1.2px, transparent 1.6px);
-  background-size: 14px 14px;
-  background-position: 0 0;
-  /* Mask so only dots inside the cursor circle are visible. The mask
-     fades from solid (cursor centre) to transparent at the radius edge,
-     producing a soft falloff without a hard ring. */
-  -webkit-mask: radial-gradient(
-    var(--cursor-radius) circle at var(--cursor-x) var(--cursor-y),
-    rgb(0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.55) 45%,
-    rgba(0, 0, 0, 0) 100%
-  );
-          mask: radial-gradient(
-    var(--cursor-radius) circle at var(--cursor-x) var(--cursor-y),
-    rgb(0, 0, 0) 0%,
-    rgba(0, 0, 0, 0.55) 45%,
-    rgba(0, 0, 0, 0) 100%
-  );
-  mix-blend-mode: plus-lighter;
-  transition: opacity 240ms ease;
-}
-/* Subtle warm halo behind the per-particle highlight — gives the cursor
-   a soft, premium aura without washing out text. Lower opacity than
-   the particle layer so it never dominates. */
-.cursor-glow::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    calc(var(--cursor-radius) * 1.6) circle at var(--cursor-x) var(--cursor-y),
-    var(--cursor-particle-soft),
-    transparent 70%
-  );
-  opacity: 0.55;
-  mix-blend-mode: plus-lighter;
-  pointer-events: none;
-}
-/* Make sure interactive content stacks above the glow on every page. */
 .poster-card,
 header,
 main > section,
@@ -1007,11 +950,71 @@ main > div,
   aspect-ratio: 1 / 1;
   border-radius: 4px;
   background: var(--cell, var(--heatmap-empty));
-  transition: transform 180ms ease, filter 180ms ease;
+  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
+  position: relative;
 }
 .heatmap-cell:hover {
   filter: brightness(1.18);
-  transform: scale(1.12);
+  transform: scale(1.16);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 65%, transparent);
+  z-index: 2;
+}
+.heatmap-cell--selected {
+  filter: brightness(1.22);
+  transform: scale(1.18);
+  box-shadow: 0 0 0 2px var(--accent);
+  z-index: 2;
+}
+
+/* Hover/focus tooltip card shared by HeatmapPoster + GitHubContribHeatmap.
+   Pinned to the cell that produced it (component sets left/top) so it
+   stays anchored even on touch devices. */
+.poster-tooltip {
+  position: absolute;
+  z-index: 30;
+  min-width: 14rem;
+  max-width: 18rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 0.85rem;
+  background: var(--bg-elev);
+  box-shadow: 0 18px 32px -16px rgba(0, 0, 0, 0.55),
+              0 0 0 1px color-mix(in oklab, var(--accent) 18%, transparent);
+  color: var(--text);
+  font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 12px));
+  animation: poster-fade-up 180ms cubic-bezier(0.21, 0.65, 0.3, 1) both;
+}
+.poster-tooltip__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 0.4rem;
+}
+.poster-tooltip__row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.45rem 0.85rem;
+  font-size: 0.7rem;
+}
+.poster-tooltip__label {
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.6rem;
+}
+.poster-tooltip__value {
+  color: var(--text);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum", "lnum";
 }
 .heatmap-day {
   font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
@@ -1085,11 +1088,14 @@ main > div,
   aspect-ratio: 1 / 1;
   border-radius: 3px;
   background: var(--cell, var(--gh-tier-0));
-  transition: transform 180ms ease, filter 180ms ease;
+  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
+  position: relative;
 }
 .gh-contrib__cell:hover {
   filter: brightness(1.18);
   transform: scale(1.16);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 65%, transparent);
+  z-index: 2;
 }
 
 /* Reduced-motion: kill the looping/transformy animations. */
@@ -1109,8 +1115,9 @@ main > div,
   .poster-card.poster-card--hover:hover,
   .poster-stat:hover,
   .poster-button:hover { transform: none; }
-  .cursor-glow { display: none; }
   .heatmap-cell { transition: none; }
   .heatmap-cell:hover { transform: none; filter: none; }
+  .gh-contrib__cell { transition: none; }
+  .gh-contrib__cell:hover { transform: none; filter: none; }
   .dot-pulse__bullet { opacity: 0.6; }
 }

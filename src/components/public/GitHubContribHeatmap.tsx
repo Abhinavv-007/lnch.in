@@ -1,5 +1,6 @@
 import { Github } from "lucide-react";
-import type { CSSProperties } from "react";
+import { useRef, useState, type CSSProperties, type MouseEvent, type FocusEvent } from "react";
+import { fmtCount } from "@/lib/format";
 
 /**
  * Public GitHub contribution heatmap.
@@ -53,12 +54,6 @@ const TIER_VAR = [
   "var(--gh-tier-4)",
 ] as const;
 
-function fmtTotal(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return `${n}`;
-}
-
 /** Find the dominant weekday for monthly tick rendering above the grid. */
 function monthTicks(weeks: ContribData["weeks"]): { weekIndex: number; label: string }[] {
   const out: { weekIndex: number; label: string }[] = [];
@@ -79,6 +74,22 @@ function monthTicks(weeks: ContribData["weeks"]): { weekIndex: number; label: st
   return out;
 }
 
+type HoverInfo = {
+  date: string;
+  count: number;
+  weekday: number;
+  left: number;
+  top: number;
+};
+
+function contribTier(count: number): string {
+  if (count >= 20) return "extreme";
+  if (count >= 12) return "high";
+  if (count >= 5) return "active";
+  if (count >= 1) return "light";
+  return "idle";
+}
+
 export default function GitHubContribHeatmap({
   data,
   profileUrl,
@@ -89,7 +100,8 @@ export default function GitHubContribHeatmap({
   const weeks = data?.weeks ?? [];
   const ticks = monthTicks(weeks);
   const total = data?.totalContributions ?? 0;
-  // Find peak day for the summary stat.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [hover, setHover] = useState<HoverInfo | null>(null);
   let peak: ContribDay | null = null;
   for (const w of weeks) {
     for (const d of w.days) {
@@ -98,8 +110,24 @@ export default function GitHubContribHeatmap({
   }
   const empty = !data?.available || total === 0;
 
+  const showHover = (e: MouseEvent | FocusEvent, day: ContribDay) => {
+    const target = e.currentTarget as HTMLElement;
+    const root = containerRef.current;
+    if (!root) return;
+    const tRect = target.getBoundingClientRect();
+    const rRect = root.getBoundingClientRect();
+    setHover({
+      date: day.date,
+      count: day.count,
+      weekday: day.weekday,
+      left: tRect.left - rRect.left + tRect.width / 2,
+      top: tRect.top - rRect.top,
+    });
+  };
+  const clearHover = () => setHover(null);
+
   return (
-    <div className="poster-card relative">
+    <div ref={containerRef} className="poster-card relative">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="poster-eyebrow">commits, issues, prs</p>
@@ -107,7 +135,8 @@ export default function GitHubContribHeatmap({
             The <span className="accent">github calendar.</span>
           </h3>
           <p className="mt-3 max-w-md text-sm leading-relaxed text-fg-soft">
-            One year of public GitHub activity for <code className="text-accent">{data?.login ?? "Abhinavv-007"}</code>.
+            One year of public GitHub activity for{" "}
+            <code className="text-accent">{data?.login ?? "Abhinavv-007"}</code>.
           </p>
         </div>
         <a
@@ -122,9 +151,11 @@ export default function GitHubContribHeatmap({
         </a>
       </div>
 
-      <div className="mt-8 overflow-x-auto">
+      <div
+        className="mt-8"
+        style={{ overflowX: "auto", overflowY: "hidden" }}
+      >
         <div className="gh-contrib min-w-[760px]">
-          {/* Month ticks */}
           <div className="gh-contrib__ticks" aria-hidden>
             <span />
             {weeks.map((_, i) => {
@@ -136,7 +167,6 @@ export default function GitHubContribHeatmap({
               );
             })}
           </div>
-          {/* 7 rows × N week-cols */}
           {Array.from({ length: 7 }, (_, weekday) => (
             <div className="gh-contrib__row" key={weekday}>
               <span className="gh-contrib__day">
@@ -148,16 +178,22 @@ export default function GitHubContribHeatmap({
                 const style = {
                   ["--cell" as string]: TIER_VAR[t],
                 } as CSSProperties;
+                const selected =
+                  hover != null && day != null && hover.date === day.date;
                 return (
                   <span
                     key={wi}
-                    className="gh-contrib__cell"
-                    style={style}
-                    title={
-                      day
-                        ? `${day.date} · ${day.count} contribution${day.count === 1 ? "" : "s"}`
-                        : ""
+                    role="button"
+                    tabIndex={day ? 0 : -1}
+                    aria-label={
+                      day ? `${day.date} — ${day.count} contributions` : ""
                     }
+                    className={`gh-contrib__cell ${selected ? "heatmap-cell--selected" : ""}`}
+                    style={style}
+                    onMouseEnter={day ? (e) => showHover(e, day) : undefined}
+                    onMouseLeave={clearHover}
+                    onFocus={day ? (e) => showHover(e, day) : undefined}
+                    onBlur={clearHover}
                   />
                 );
               })}
@@ -165,6 +201,31 @@ export default function GitHubContribHeatmap({
           ))}
         </div>
       </div>
+
+      {hover ? (
+        <div
+          role="tooltip"
+          className="poster-tooltip"
+          style={{ left: hover.left, top: hover.top }}
+        >
+          <div className="poster-tooltip__head">
+            <span>GitHub</span>
+            <span>{contribTier(hover.count)}</span>
+          </div>
+          <div className="poster-tooltip__row">
+            <span className="poster-tooltip__label">Date</span>
+            <span className="poster-tooltip__value">{hover.date}</span>
+            <span className="poster-tooltip__label">Day</span>
+            <span className="poster-tooltip__value">
+              {DAY_LABEL[hover.weekday] ?? ""}
+            </span>
+            <span className="poster-tooltip__label">Contribs</span>
+            <span className="poster-tooltip__value">
+              {fmtCount(hover.count)}
+            </span>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
         <span className="font-mono uppercase tracking-[0.22em]">contributions</span>
@@ -185,7 +246,7 @@ export default function GitHubContribHeatmap({
           <p className="poster-stat__label">Most active day</p>
           {peak && peak.count > 0 ? (
             <p className="poster-stat__value">
-              {peak.count}{" "}
+              {fmtCount(peak.count)}{" "}
               <span className="font-mono text-xs lowercase tracking-wide text-muted">
                 contribs
               </span>
@@ -200,7 +261,7 @@ export default function GitHubContribHeatmap({
         <div className="poster-stat poster-stat--block">
           <p className="poster-stat__label">Past year</p>
           <p className="poster-stat__value">
-            {empty ? <span className="text-muted">—</span> : fmtTotal(total)}
+            {empty ? <span className="text-muted">—</span> : fmtCount(total)}
           </p>
           <p className="poster-stat__hint">total contributions</p>
         </div>

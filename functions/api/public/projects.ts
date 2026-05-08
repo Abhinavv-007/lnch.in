@@ -8,6 +8,7 @@
 import { type Env, json, nowSec } from "../../_lib/env";
 import { PROJECTS } from "../../_lib/projects";
 import { claimProbeSlot, runHealthProbes } from "../../_lib/probes";
+import { clampUptimeServer } from "../../_lib/uptime";
 
 // Public-side staleness window. If the freshest probe is older than this we
 // kick off a background re-probe so the next reader sees fresh data.
@@ -141,6 +142,8 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, waitUntil }) => {
       latencies.length > 0
         ? latencies[Math.min(latencies.length - 1, Math.floor(latencies.length * 0.95))]
         : null;
+    const rawUptime =
+      lat && lat.total > 0 ? (lat.okCount / lat.total) * 100 : null;
     return {
       slug: p.slug,
       name: p.name,
@@ -172,6 +175,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, waitUntil }) => {
         probes: lat?.total ?? 0,
         ok: lat?.okCount ?? 0,
         p95LatencyMs: p95,
+        // Uptime is clamped to [0, 99.99] so the public surface never
+        // claims a perfect "100.00%" — Cloudflare's own SLO is 99.99%, so
+        // anything we serve via Pages cannot exceed that bound.
+        uptimePct: clampUptimeServer(rawUptime),
       },
     };
   });

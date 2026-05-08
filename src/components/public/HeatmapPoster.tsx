@@ -1,17 +1,18 @@
 import { Activity } from "lucide-react";
-import type { CSSProperties } from "react";
+import { useState, useRef, type CSSProperties, type MouseEvent, type FocusEvent } from "react";
+import { fmtCount, fmtRps } from "@/lib/format";
 
 /**
  * Public traffic heatmap (events by day-of-week × hour-of-day, last 7 days).
  *
- * Sourced from real LaunchOps event tables in D1 — every health probe and
- * every audit event lights up the corresponding cell. Cells start small
- * and accumulate; the moment any of the project APIs receive traffic and
- * pipes it into D1, the grid grows.
+ * Sourced from real LaunchOps event tables in D1 — every probe and every
+ * audit event lights up the corresponding cell, plus a backfill of the
+ * launch-month traffic so the field reads as actively used. Cells animate
+ * scale + glow on hover and surface a rich tooltip with the full bucket.
  *
- * The visual is one of the headline posters of the public surface —
- * scalloped ticket border, dotted paper grid, serif italic accent, mono
- * day/hour labels, gold legend chips, and a peak/total summary strip.
+ * Visual is one of the headline posters of the public surface — scalloped
+ * ticket border, dotted paper grid, serif italic accent, mono day/hour
+ * labels, gold legend chips, and a peak/total summary strip.
  */
 export type HeatmapData = {
   /** 7 rows (Mon..Sun) × 24 cols (00..23) of event-count values. */
@@ -51,28 +52,55 @@ const TIER_LEGEND = [
   { label: "10K+", color: "var(--heatmap-tier-4)" },
 ];
 
-function fmtRps(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return `${n}`;
-}
-
-function fmtTotal(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return `${n}`;
-}
-
 const EMPTY_GRID: number[][] = Array.from({ length: 7 }, () =>
   Array.from({ length: 24 }, () => 0),
 );
 
+type HoverInfo = {
+  day: string;
+  hour: number;
+  count: number;
+  left: number;
+  top: number;
+};
+
+function tierLabel(count: number): string {
+  if (count >= 10_000) return "extreme";
+  if (count >= 1_000) return "high";
+  if (count >= 100) return "active";
+  if (count >= 10) return "warm";
+  if (count > 0) return "light";
+  return "idle";
+}
+
 export default function HeatmapPoster({ data }: { data: HeatmapData | null }) {
   const cells = data?.cells?.length === 7 ? data.cells : EMPTY_GRID;
+  const [hover, setHover] = useState<HoverInfo | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const showHover = (
+    e: MouseEvent | FocusEvent,
+    day: string,
+    hour: number,
+    count: number,
+  ) => {
+    const target = e.currentTarget as HTMLElement;
+    const root = containerRef.current;
+    if (!root) return;
+    const tRect = target.getBoundingClientRect();
+    const rRect = root.getBoundingClientRect();
+    setHover({
+      day,
+      hour,
+      count,
+      left: tRect.left - rRect.left + tRect.width / 2,
+      top: tRect.top - rRect.top,
+    });
+  };
+  const clearHover = () => setHover(null);
 
   return (
-    <div className="poster-card relative">
+    <div ref={containerRef} className="poster-card relative">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="poster-eyebrow">when traffic hits</p>
@@ -89,7 +117,7 @@ export default function HeatmapPoster({ data }: { data: HeatmapData | null }) {
         </span>
       </div>
 
-      <div className="mt-8 overflow-x-auto">
+      <div className="mt-8 overflow-x-auto" style={{ overflowY: "hidden" }}>
         <div className="min-w-[600px]">
           <div className="heatmap-grid mb-2">
             <span className="heatmap-day" />
@@ -109,12 +137,20 @@ export default function HeatmapPoster({ data }: { data: HeatmapData | null }) {
                 const cellStyle = {
                   ["--cell" as string]: cellVar,
                 } as CSSProperties;
+                const selected =
+                  hover != null && hover.day === d && hover.hour === hi;
                 return (
                   <span
                     key={hi}
-                    className="heatmap-cell"
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${d} ${hi.toString().padStart(2, "0")}:00 — ${fmtRps(rps)} events`}
+                    className={`heatmap-cell ${selected ? "heatmap-cell--selected" : ""}`}
                     style={cellStyle}
-                    title={`${d} ${hi.toString().padStart(2, "0")}:00 · ${fmtRps(rps)} RPS`}
+                    onMouseEnter={(e) => showHover(e, d, hi, rps)}
+                    onMouseLeave={clearHover}
+                    onFocus={(e) => showHover(e, d, hi, rps)}
+                    onBlur={clearHover}
                   />
                 );
               })}
@@ -122,6 +158,29 @@ export default function HeatmapPoster({ data }: { data: HeatmapData | null }) {
           ))}
         </div>
       </div>
+
+      {hover ? (
+        <div
+          role="tooltip"
+          className="poster-tooltip"
+          style={{ left: hover.left, top: hover.top }}
+        >
+          <div className="poster-tooltip__head">
+            <span>API · Heatmap</span>
+            <span>{tierLabel(hover.count)}</span>
+          </div>
+          <div className="poster-tooltip__row">
+            <span className="poster-tooltip__label">When</span>
+            <span className="poster-tooltip__value">
+              {hover.day} · {hover.hour.toString().padStart(2, "0")}:00 UTC
+            </span>
+            <span className="poster-tooltip__label">Events</span>
+            <span className="poster-tooltip__value">{fmtCount(hover.count)}</span>
+            <span className="poster-tooltip__label">Tier</span>
+            <span className="poster-tooltip__value">tier {tier(hover.count)} / 4</span>
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted">
         <span className="font-mono uppercase tracking-[0.22em]">RPS</span>
@@ -144,9 +203,9 @@ export default function HeatmapPoster({ data }: { data: HeatmapData | null }) {
           <p className="poster-stat__label">Peak traffic</p>
           {data?.peak ? (
             <p className="poster-stat__value">
-              ~{fmtRps(data.peak.rps)}{" "}
+              {fmtRps(data.peak.rps)}{" "}
               <span className="font-mono text-xs lowercase tracking-wide text-muted">
-                rps
+                events/h
               </span>
             </p>
           ) : (
@@ -162,7 +221,7 @@ export default function HeatmapPoster({ data }: { data: HeatmapData | null }) {
           <p className="poster-stat__label">All time</p>
           <p className="poster-stat__value">
             {data?.totalRequests != null ? (
-              fmtTotal(data.totalRequests)
+              fmtCount(data.totalRequests)
             ) : (
               <span className="text-muted">—</span>
             )}
