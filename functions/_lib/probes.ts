@@ -24,9 +24,17 @@ export type ProbeResult = {
  *
  * Implementation note: timeout is enforced via `AbortController` so a slow
  * upstream can't drag the whole batch beyond a worker invocation budget.
+ *
+ * Persists to two tables:
+ *   - `launchops_health_snapshots`  — current "is it up right now?" view
+ *   - `launchops_probe_history`     — long-term time-series for uptime/p95
  */
-export async function runHealthProbes(env: Env, opts: { timeoutMs?: number } = {}): Promise<ProbeResult[]> {
+export async function runHealthProbes(
+  env: Env,
+  opts: { timeoutMs?: number; source?: "cron" | "opportunistic" | "admin" } = {},
+): Promise<ProbeResult[]> {
   const timeoutMs = opts.timeoutMs ?? 6000;
+  const source = opts.source ?? "opportunistic";
   const results: ProbeResult[] = [];
   await Promise.all(
     PROJECTS.flatMap((p) =>
@@ -51,16 +59,31 @@ export async function runHealthProbes(env: Env, opts: { timeoutMs?: number } = {
 
   if (results.length > 0) {
     const ts = nowSec();
-    // Batch insert via D1 prepared statements. D1's batch() takes an array
-    // of bound statements and runs them atomically.
-    const stmt = env.DB.prepare(
+    const snapStmt = env.DB.prepare(
       "INSERT INTO launchops_health_snapshots (project_slug, target, ok, status, latency_ms, ts) VALUES (?, ?, ?, ?, ?, ?)",
     );
-    await env.DB.batch(
-      results.map((r) =>
-        stmt.bind(r.project, r.target, r.ok ? 1 : 0, r.status, r.latencyMs, ts),
-      ),
+    const histStmt = env.DB.prepare(
+      "INSERT INTO launchops_probe_history (project_slug, target, ok, status, latency_ms, ts, source) VALUES (?, ?, ?, ?, ?, ?, ?)",
     );
+    const batch = [
+      ...results.map((r) =>
+        snapStmt.bind(r.project, r.target, r.ok ? 1 : 0, r.status, r.latencyMs, ts),
+      ),
+      ...results.map((r) =>
+        histStmt.bind(r.project, r.target, r.ok ? 1 : 0, r.status, r.latencyMs, ts, source),
+      ),
+    ];
+    try {
+      await env.DB.batch(batch);
+    } catch {
+      // Probe history table may not exist yet on a fresh DB — fall back to
+      // snapshots-only so the live status surface still updates.
+      await env.DB.batch(
+        results.map((r) =>
+          snapStmt.bind(r.project, r.target, r.ok ? 1 : 0, r.status, r.latencyMs, ts),
+        ),
+      );
+    }
   }
 
   return results;

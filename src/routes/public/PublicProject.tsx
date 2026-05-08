@@ -8,10 +8,63 @@
  */
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowUpRight, Github, Activity } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Github, Activity, GitCommit, ListChecks, Newspaper, Rocket } from "lucide-react";
 import PublicHeader from "@/components/public/PublicHeader";
 import PublicFooter from "@/components/public/PublicFooter";
 import LatencyStrip from "@/components/public/LatencyStrip";
+
+type UptimeBody = {
+  slug: string;
+  window: "24h";
+  generatedAt: number;
+  samples: number;
+  ok: number;
+  uptimePct: number | null;
+  errorRatePct: number | null;
+  p50: number | null;
+  p95: number | null;
+  p99: number | null;
+  source: "probe_history" | "health_snapshots" | "none";
+};
+
+type DeploymentRow = {
+  source: "cloudflare" | "vercel";
+  project: string;
+  state: string;
+  sha: string | null;
+  ts: number;
+  url?: string | null;
+  target?: string | null;
+};
+
+type DeploymentsBody = {
+  slug: string;
+  available: boolean;
+  sources: string[];
+  deployments: DeploymentRow[];
+  counts: { last24h: number; failed: number; total: number };
+};
+
+type ChangelogBody = {
+  slug: string;
+  entries: { id: number; title: string; body: string; publishedAt: number }[];
+};
+
+type TasksBody = {
+  slug: string;
+  shipped: { id: number; title: string; body: string | null; priority: number; tags: string[]; shippedAt: number }[];
+};
+
+type AnalyticsBody = {
+  slug: string;
+  daily7d: { day: string; samples: number; ok: number; uptimePct: number | null }[];
+  probes: {
+    last24h: { samples: number; uptimePct: number | null; p95: number | null };
+    last7d: { samples: number; uptimePct: number | null; p95: number | null };
+    last30d: { samples: number; uptimePct: number | null; p95: number | null };
+  };
+  audit: { events30d: number };
+};
 
 type Snippet = { language: "shell" | "js" | "python"; label: string; code: string };
 
@@ -52,9 +105,24 @@ function timeAgo(ts: number): string {
   return `${Math.floor(diff / 86400)}d`;
 }
 
+async function safeJson<T>(url: string): Promise<T | null> {
+  try {
+    const r = await fetch(url, { credentials: "omit" });
+    if (!r.ok) return null;
+    return (await r.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
 export default function PublicProject() {
   const { slug } = useParams<{ slug: string }>();
   const [detail, setDetail] = useState<ProjectDetail | null>(null);
+  const [uptime, setUptime] = useState<UptimeBody | null>(null);
+  const [deployments, setDeployments] = useState<DeploymentsBody | null>(null);
+  const [changelog, setChangelog] = useState<ChangelogBody | null>(null);
+  const [tasks, setTasks] = useState<TasksBody | null>(null);
+  const [analytics, setAnalytics] = useState<AnalyticsBody | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeSnippet, setActiveSnippet] = useState<Snippet["language"]>("shell");
 
@@ -72,6 +140,30 @@ export default function PublicProject() {
       } catch {
         if (!cancelled) setError("Network error");
       }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [slug]);
+
+  useEffect(() => {
+    if (!slug) return;
+    let cancelled = false;
+    (async () => {
+      const base = `/api/public/projects/${slug}`;
+      const [u, d, c, t, a] = await Promise.all([
+        safeJson<UptimeBody>(`${base}/uptime`),
+        safeJson<DeploymentsBody>(`${base}/deployments`),
+        safeJson<ChangelogBody>(`${base}/changelog`),
+        safeJson<TasksBody>(`${base}/tasks`),
+        safeJson<AnalyticsBody>(`${base}/analytics`),
+      ]);
+      if (cancelled) return;
+      setUptime(u);
+      setDeployments(d);
+      setChangelog(c);
+      setTasks(t);
+      setAnalytics(a);
     })();
     return () => {
       cancelled = true;
@@ -110,10 +202,18 @@ export default function PublicProject() {
     );
   }
 
+  // Prefer the long-term uptime endpoint (probe_history). Fall back to the
+  // existing snapshots-derived numbers if the new endpoint hasn't replied
+  // yet or has no samples.
   const okPct =
-    detail.health.last24h.total > 0
+    uptime?.uptimePct ??
+    (detail.health.last24h.total > 0
       ? Number(((detail.health.last24h.ok / detail.health.last24h.total) * 100).toFixed(2))
-      : null;
+      : null);
+  const p95 = uptime?.p95 ?? detail.health.last24h.p95LatencyMs;
+  const p99 = uptime?.p99 ?? detail.health.last24h.p99LatencyMs;
+  const samples = uptime?.samples ?? detail.health.last24h.total;
+  const okSamples = uptime?.ok ?? detail.health.last24h.ok;
 
   const points = detail.health.snapshots
     .slice()
@@ -165,17 +265,21 @@ export default function PublicProject() {
             <PosterStat
               label="Uptime · 24h"
               value={okPct != null ? `${okPct.toFixed(2)}%` : "—"}
-              hint="from health probes"
+              hint={
+                uptime?.errorRatePct != null && uptime.errorRatePct > 0
+                  ? `${uptime.errorRatePct.toFixed(2)}% errors`
+                  : "from health probes"
+              }
             />
             <PosterStat
               label="Probes · 24h"
-              value={`${detail.health.last24h.ok}/${detail.health.last24h.total}`}
+              value={`${okSamples}/${samples}`}
               hint="ok / total"
             />
             <PosterStat
               label="p95 latency · 24h"
-              value={detail.health.last24h.p95LatencyMs != null ? `${detail.health.last24h.p95LatencyMs}ms` : "—"}
-              hint={detail.health.last24h.p99LatencyMs != null ? `p99 ${detail.health.last24h.p99LatencyMs}ms` : ""}
+              value={p95 != null ? `${p95}ms` : "—"}
+              hint={p99 != null ? `p99 ${p99}ms` : ""}
             />
             <PosterStat
               label="Last probe"
@@ -288,10 +392,11 @@ export default function PublicProject() {
       </section>
 
       {/* GitHub */}
-      <section className="mx-auto max-w-5xl px-6 pb-24">
+      <section className="mx-auto max-w-5xl px-6 pb-12">
         <div className="poster-card poster-card--sm">
           <div className="mb-4 flex items-end justify-between gap-3">
             <h2 className="poster-headline poster-headline--sm">
+              <GitCommit className="mr-2 inline-block h-4 w-4 text-accent" />
               Recent <span className="accent">commits</span>
             </h2>
             {(detail.github.openPRs != null || detail.github.openIssues != null) && (
@@ -321,6 +426,240 @@ export default function PublicProject() {
                 </li>
               ))}
             </ul>
+          )}
+        </div>
+      </section>
+
+      {/* Deployments */}
+      <section className="mx-auto max-w-5xl px-6 pb-12">
+        <div className="poster-card poster-card--sm">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <h2 className="poster-headline poster-headline--sm">
+              <Rocket className="mr-2 inline-block h-4 w-4 text-accent" />
+              Recent <span className="accent">deployments</span>
+            </h2>
+            {deployments?.counts ? (
+              <div className="hidden flex-wrap gap-2 text-xs md:flex">
+                <span className="poster-stamp">{deployments.counts.last24h} in 24h</span>
+                <span className="poster-stamp">
+                  {deployments.counts.failed} failed
+                </span>
+              </div>
+            ) : null}
+          </div>
+          {!deployments ? (
+            <p className="text-sm text-fg-soft">Loading deployments…</p>
+          ) : !deployments.available ? (
+            <p className="text-sm text-fg-soft">
+              No deployment data available — connect a Cloudflare Pages or Vercel
+              token in <code className="text-accent">CLOUDFLARE_API_TOKEN</code> /{' '}
+              <code className="text-accent">VERCEL_TOKEN</code>.
+            </p>
+          ) : (
+            <ul>
+              {deployments.deployments.slice(0, 12).map((d, i) => (
+                <li key={`${d.source}-${d.ts}-${i}`} className="poster-row">
+                  <span className="poster-row__label font-mono text-xs text-accent">
+                    {d.sha ? d.sha.slice(0, 7) : d.source.slice(0, 7)}
+                  </span>
+                  {d.url ? (
+                    <a
+                      href={d.url.startsWith("http") ? d.url : `https://${d.url}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="poster-row__label flex-1 hover:text-accent"
+                    >
+                      {d.project}
+                    </a>
+                  ) : (
+                    <span className="poster-row__label flex-1">{d.project}</span>
+                  )}
+                  <span className="poster-row__detail poster-row__hide-sm uppercase tracking-[0.18em] text-muted">
+                    {d.source}
+                  </span>
+                  <span
+                    className={
+                      /error|fail|cancel/i.test(d.state)
+                        ? "poster-stamp poster-stamp--err"
+                        : /ready|success/i.test(d.state)
+                          ? "poster-stamp poster-stamp--ok"
+                          : "poster-stamp"
+                    }
+                  >
+                    {d.state}
+                  </span>
+                  <span className="poster-row__detail">
+                    {timeAgo(Math.floor(d.ts / 1000))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      {/* Changelog */}
+      <section className="mx-auto max-w-5xl px-6 pb-12">
+        <div className="poster-card poster-card--sm">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <h2 className="poster-headline poster-headline--sm">
+              <Newspaper className="mr-2 inline-block h-4 w-4 text-accent" />
+              <span className="accent">Changelog</span>
+            </h2>
+            {changelog ? (
+              <p className="hidden text-xs uppercase tracking-[0.28em] text-muted md:block">
+                {changelog.entries.length} published
+              </p>
+            ) : null}
+          </div>
+          {!changelog ? (
+            <p className="text-sm text-fg-soft">Loading changelog…</p>
+          ) : changelog.entries.length === 0 ? (
+            <p className="text-sm text-fg-soft">
+              No published entries yet. Operator-side drafts stay private.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {changelog.entries.slice(0, 8).map((entry) => (
+                <li
+                  key={entry.id}
+                  id={`changelog-${entry.id}`}
+                  className="rounded-xl border border-rule bg-paper-elev p-4"
+                >
+                  <div className="flex items-baseline justify-between gap-3">
+                    <p className="font-serif text-lg text-fg">{entry.title}</p>
+                    <span className="shrink-0 text-xs uppercase tracking-[0.2em] text-muted">
+                      {timeAgo(entry.publishedAt)} ago
+                    </span>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-fg-soft">
+                    {entry.body}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      {/* Shipped tasks */}
+      <section className="mx-auto max-w-5xl px-6 pb-12">
+        <div className="poster-card poster-card--sm">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <h2 className="poster-headline poster-headline--sm">
+              <ListChecks className="mr-2 inline-block h-4 w-4 text-accent" />
+              <span className="accent">Shipped</span>
+            </h2>
+            {tasks ? (
+              <p className="hidden text-xs uppercase tracking-[0.28em] text-muted md:block">
+                {tasks.shipped.length} items
+              </p>
+            ) : null}
+          </div>
+          {!tasks ? (
+            <p className="text-sm text-fg-soft">Loading shipped work…</p>
+          ) : tasks.shipped.length === 0 ? (
+            <p className="text-sm text-fg-soft">
+              No shipped tasks yet. Open / blocked work stays in the operator console.
+            </p>
+          ) : (
+            <ul>
+              {tasks.shipped.slice(0, 12).map((t) => (
+                <li key={t.id} id={`task-${t.id}`} className="poster-row">
+                  <span className="poster-bullet text-accent" aria-hidden />
+                  <span className="poster-row__label flex-1 text-fg">{t.title}</span>
+                  {t.tags.length > 0 ? (
+                    <span className="poster-row__detail poster-row__hide-sm uppercase tracking-[0.18em] text-muted">
+                      {t.tags.slice(0, 3).join(" · ")}
+                    </span>
+                  ) : null}
+                  <span className="poster-row__detail">{timeAgo(t.shippedAt)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
+      {/* Analytics */}
+      <section className="mx-auto max-w-5xl px-6 pb-24">
+        <div className="poster-card poster-card--sm">
+          <div className="mb-4 flex items-end justify-between gap-3">
+            <h2 className="poster-headline poster-headline--sm">
+              <span className="accent">Activity</span>
+            </h2>
+            {analytics ? (
+              <p className="hidden text-xs uppercase tracking-[0.28em] text-muted md:block">
+                {analytics.audit.events30d} events · 30d
+              </p>
+            ) : null}
+          </div>
+          {!analytics ? (
+            <p className="text-sm text-fg-soft">Loading activity…</p>
+          ) : (
+            <>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <PosterStat
+                  label="Uptime · 7d"
+                  value={
+                    analytics.probes.last7d.uptimePct != null
+                      ? `${analytics.probes.last7d.uptimePct.toFixed(2)}%`
+                      : "—"
+                  }
+                  hint={`${analytics.probes.last7d.samples} probes`}
+                />
+                <PosterStat
+                  label="Uptime · 30d"
+                  value={
+                    analytics.probes.last30d.uptimePct != null
+                      ? `${analytics.probes.last30d.uptimePct.toFixed(2)}%`
+                      : "—"
+                  }
+                  hint={`${analytics.probes.last30d.samples} probes`}
+                />
+                <PosterStat
+                  label="p95 · 7d"
+                  value={
+                    analytics.probes.last7d.p95 != null
+                      ? `${analytics.probes.last7d.p95}ms`
+                      : "—"
+                  }
+                  hint={
+                    analytics.probes.last30d.p95 != null
+                      ? `p95 30d ${analytics.probes.last30d.p95}ms`
+                      : ""
+                  }
+                />
+              </div>
+              <div className="mt-6 flex items-end gap-1">
+                {analytics.daily7d.map((d) => {
+                  const h = d.uptimePct == null ? 4 : Math.max(4, Math.round(d.uptimePct * 0.4));
+                  const colour =
+                    d.uptimePct == null
+                      ? "var(--line)"
+                      : d.uptimePct >= 99
+                        ? "var(--signal-ok)"
+                        : d.uptimePct >= 95
+                          ? "var(--signal-warn)"
+                          : "var(--signal-err)";
+                  return (
+                    <div
+                      key={d.day}
+                      title={`${d.day} · ${d.samples} probes · ${d.uptimePct?.toFixed(1) ?? "—"}%`}
+                      className="flex flex-1 flex-col items-center gap-1"
+                    >
+                      <div
+                        style={{ height: `${h}px`, background: colour }}
+                        className="w-full rounded-sm transition"
+                      />
+                      <span className="font-mono text-[9px] uppercase text-muted">
+                        {new Date(d.day).toLocaleDateString("en-US", { weekday: "short" }).slice(0, 1)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </section>
