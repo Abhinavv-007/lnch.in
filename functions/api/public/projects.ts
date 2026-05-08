@@ -7,6 +7,15 @@
  */
 import { type Env, json, nowSec } from "../../_lib/env";
 import { PROJECTS } from "../../_lib/projects";
+import { claimProbeSlot, runHealthProbes } from "../../_lib/probes";
+
+// Public-side staleness window. If the freshest probe is older than this we
+// kick off a background re-probe so the next reader sees fresh data.
+const STALE_AFTER_SEC = 5 * 60;
+// We require the freshest probe to be within this window to render a real
+// up/down/warn state — anything older falls back to "unknown" so the page
+// never displays a stale "DOWN" caused by a transient outage from hours ago.
+const FRESH_WINDOW_SEC = 60 * 60;
 
 type ProbeRow = {
   project_slug: string;
@@ -42,11 +51,15 @@ const PROJECT_ACCENTS: Record<string, string> = {
   portfolio: "#a78bfa",
 };
 
-export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
+export const onRequestGet: PagesFunction<Env> = async ({ env, waitUntil }) => {
   const now = nowSec();
   const since = now - 24 * 60 * 60;
+  const freshSince = now - FRESH_WINDOW_SEC;
 
-  // Single query: latest probe per (project, target) inside the last 24h.
+  // Single query: latest probe per (project, target) within the freshness
+  // window. Anything older than `FRESH_WINDOW_SEC` is dropped — the project
+  // falls back to "unknown" rather than displaying a stale DOWN from hours
+  // / days ago.
   let latestRows: ProbeRow[] = [];
   let latencyRows: { project_slug: string; latency_ms: number | null; ok: number }[] = [];
   try {
@@ -56,12 +69,15 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
        JOIN (
          SELECT project_slug, target, MAX(ts) AS ts
          FROM launchops_health_snapshots
+         WHERE ts >= ?
          GROUP BY project_slug, target
        ) latest
          ON latest.project_slug = s.project_slug
         AND latest.target = s.target
         AND latest.ts = s.ts`,
-    ).all<ProbeRow>();
+    )
+      .bind(freshSince)
+      .all<ProbeRow>();
     latestRows = latest.results ?? [];
 
     const latency = await env.DB.prepare(
@@ -74,6 +90,30 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
     latencyRows = latency.results ?? [];
   } catch {
     /* DB not yet migrated — return registry-only */
+  }
+
+  // Opportunistic background refresh. If the freshest probe is older than
+  // the staleness threshold (or there's no probe at all), kick off a
+  // background re-probe so the next visitor sees fresh data. KV-coordinated
+  // claim guarantees we don't thunder-herd the upstream health endpoints
+  // when the landing page gets a burst of traffic.
+  const newest =
+    latestRows.length === 0
+      ? 0
+      : latestRows.reduce((m, r) => (r.ts > m ? r.ts : m), 0);
+  const stale = newest === 0 || now - newest > STALE_AFTER_SEC;
+  if (stale && typeof waitUntil === "function") {
+    waitUntil(
+      (async () => {
+        const claimed = await claimProbeSlot(env, STALE_AFTER_SEC);
+        if (!claimed) return;
+        try {
+          await runHealthProbes(env, { timeoutMs: 6000 });
+        } catch {
+          /* swallow — public path must never throw */
+        }
+      })(),
+    );
   }
 
   const probesBySlug = new Map<string, ProbeRow[]>();

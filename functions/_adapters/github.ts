@@ -118,6 +118,74 @@ export class GithubAdapter {
       .map((r) => ({ name: r.name, conclusion: r.conclusion!, ts: Date.parse(r.updated_at) }));
   }
 
+  /**
+   * GitHub contribution calendar (53-week × 7-day grid). Uses the GraphQL
+   * endpoint because the REST API does not expose this. Token only needs
+   * `read:user` scope (the public profile route is enough).
+   */
+  async getContributionCalendar(login: string): Promise<{
+    totalContributions: number;
+    weeks: { firstDay: string; days: { date: string; count: number; weekday: number; color?: string }[] }[];
+  }> {
+    if (!this.token) throw new Error("GITHUB_TOKEN not configured");
+    const query = `query($login: String!) {
+      user(login: $login) {
+        contributionsCollection {
+          contributionCalendar {
+            totalContributions
+            weeks {
+              firstDay
+              contributionDays { date contributionCount weekday color }
+            }
+          }
+        }
+      }
+    }`;
+    const res = await fetch(`${API}/graphql`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        "User-Agent": "lnch.in-launchops",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query, variables: { login } }),
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`GitHub GraphQL ${res.status}: ${body.slice(0, 200)}`);
+    }
+    const json = (await res.json()) as {
+      data?: {
+        user?: {
+          contributionsCollection?: {
+            contributionCalendar?: {
+              totalContributions: number;
+              weeks: { firstDay: string; contributionDays: { date: string; contributionCount: number; weekday: number; color?: string }[] }[];
+            };
+          };
+        };
+      };
+      errors?: { message: string }[];
+    };
+    if (json.errors?.length) {
+      throw new Error(`GitHub GraphQL: ${json.errors.map((e) => e.message).join("; ")}`);
+    }
+    const cal = json.data?.user?.contributionsCollection?.contributionCalendar;
+    if (!cal) throw new Error("GitHub GraphQL: empty contribution calendar");
+    return {
+      totalContributions: cal.totalContributions,
+      weeks: cal.weeks.map((w) => ({
+        firstDay: w.firstDay,
+        days: w.contributionDays.map((d) => ({
+          date: d.date,
+          count: d.contributionCount,
+          weekday: d.weekday,
+          color: d.color,
+        })),
+      })),
+    };
+  }
+
   async tokenScopeHealth(): Promise<{ ok: boolean; scopes: string[]; reason?: string }> {
     if (!this.token) return { ok: false, scopes: [], reason: "no token" };
     const res = await fetch(`${API}/rate_limit`, {

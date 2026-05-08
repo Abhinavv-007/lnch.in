@@ -21,6 +21,7 @@ import LatencyStrip from "@/components/public/LatencyStrip";
 import CommitTicker, { type Commit } from "@/components/public/CommitTicker";
 import ProjectCard, { type ProjectSummary } from "@/components/public/ProjectCard";
 import HeatmapPoster, { type HeatmapData } from "@/components/public/HeatmapPoster";
+import GitHubContribHeatmap, { type ContribData } from "@/components/public/GitHubContribHeatmap";
 import { useHashScroll } from "@/lib/useHashScroll";
 
 type ProjectsResponse = {
@@ -62,21 +63,24 @@ export default function LandingPage() {
   const [probes, setProbes] = useState<ProbesResponse | null>(null);
   const [commits, setCommits] = useState<CommitsResponse | null>(null);
   const [heatmap, setHeatmap] = useState<HeatmapData | null>(null);
+  const [contrib, setContrib] = useState<ContribData | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [p, q, c, h] = await Promise.all([
+      const [p, q, c, h, gc] = await Promise.all([
         safeJson<ProjectsResponse>("/api/public/projects"),
         safeJson<ProbesResponse>("/api/public/probes"),
         safeJson<CommitsResponse>("/api/public/commits"),
         safeJson<HeatmapData>("/api/public/heatmap"),
+        safeJson<ContribData>("/api/public/github/contributions"),
       ]);
       if (cancelled) return;
       setProjects(p);
       setProbes(q);
       setCommits(c);
       setHeatmap(h);
+      setContrib(gc);
     })();
     return () => {
       cancelled = true;
@@ -197,9 +201,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Heatmap — RPS by day × hour */}
+      {/* Heatmap — API events by day × hour, real D1-sourced */}
       <section id="heatmap" className="mx-auto max-w-6xl px-6 pb-14">
         <HeatmapPoster data={heatmap} />
+      </section>
+
+      {/* GitHub contribution heatmap (53 weeks × 7 days) */}
+      <section id="github" className="mx-auto max-w-6xl px-6 pb-14">
+        <GitHubContribHeatmap
+          data={contrib}
+          profileUrl={`https://github.com/${contrib?.login ?? "Abhinavv-007"}`}
+        />
       </section>
 
       {/* Projects */}
