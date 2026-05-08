@@ -18,19 +18,31 @@ import {
   checkRateLimit,
   rateLimitHeaders,
 } from "../../_lib/rateLimit";
+import { recordPublicCall } from "../../_lib/publicAudit";
 
 const NO_CHARGE_PATHS = new Set(["/api/public/health"]);
 
-export const onRequest: PagesFunction<Env> = async ({ env, request, next }) => {
+export const onRequest: PagesFunction<Env> = async (ctx) => {
+  const { env, request, next } = ctx;
   const url = new URL(request.url);
 
   if (NO_CHARGE_PATHS.has(url.pathname)) {
     return next();
   }
 
+  const t0 = Date.now();
   const decision = await checkRateLimit(env, request);
   if (!decision.ok) {
-    return buildLimitExceededResponse(decision);
+    const blocked = buildLimitExceededResponse(decision);
+    ctx.waitUntil(
+      recordPublicCall(env, {
+        request,
+        status: blocked.status,
+        latencyMs: Date.now() - t0,
+        decision,
+      }),
+    );
+    return blocked;
   }
 
   const downstream = await next();
@@ -38,6 +50,14 @@ export const onRequest: PagesFunction<Env> = async ({ env, request, next }) => {
   for (const [k, v] of Object.entries(rateLimitHeaders(decision))) {
     merged.set(k, v);
   }
+  ctx.waitUntil(
+    recordPublicCall(env, {
+      request,
+      status: downstream.status,
+      latencyMs: Date.now() - t0,
+      decision,
+    }),
+  );
   return new Response(downstream.body, {
     status: downstream.status,
     statusText: downstream.statusText,
