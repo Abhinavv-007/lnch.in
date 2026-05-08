@@ -350,6 +350,8 @@ function OverviewSection({ project, detail }: { project: Project; detail: Detail
       ) : null}
 
       {project.slug === "portfolio" ? <PortfolioPanel /> : null}
+      {project.slug === "modih" ? <ModihPanel /> : null}
+
 
       <Link to={`/ops/projects/${project.slug}/users`} className="block">
         <div className="panel p-5 hover:border-accent">
@@ -515,6 +517,202 @@ function PortfolioPanel() {
         fetched {timeAgo(data.fetchedAt)}.
       </p>
     </div>
+  );
+}
+
+/* ---------- Modih native panel ---------- */
+
+type ModihNativeSection<T = unknown> = {
+  ok: boolean;
+  status: number;
+  reason?: string;
+  data: T | null;
+};
+
+type ModihNative = {
+  base: string;
+  fetchedAt: number;
+  configured: boolean;
+  needs: string[];
+  fallbackUrl: string;
+  users: ModihNativeSection<Record<string, unknown>>;
+  inboxes: ModihNativeSection<Record<string, unknown>>;
+  emails: ModihNativeSection<Record<string, unknown>>;
+  apiKeys: ModihNativeSection<Record<string, unknown>>;
+  recentEmails: ModihNativeSection<unknown>;
+  recentSignups: ModihNativeSection<unknown>;
+  abuse: ModihNativeSection<Record<string, unknown>>;
+};
+
+function summaryNumber(section: ModihNativeSection<Record<string, unknown>>, keys: string[]): number | null {
+  if (!section.ok || !section.data) return null;
+  for (const k of keys) {
+    const v = section.data[k];
+    if (typeof v === "number") return v;
+  }
+  return null;
+}
+
+function ModihPanel() {
+  const [data, setData] = useState<ModihNative | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    api
+      .get<ModihNative>("/api/ops/projects/modih-data")
+      .then(setData)
+      .catch((e: Error) => setError(e?.message ?? "Failed to load Modih dashboard"));
+  }, []);
+
+  if (error) {
+    return (
+      <div className="panel p-5 text-sm signal-err">
+        Couldn&apos;t load Modih dashboard: {error}
+      </div>
+    );
+  }
+  if (!data) return <PanelSkeleton title="Modih dashboard" />;
+
+  const usersTotal = summaryNumber(data.users, ["total", "users", "count"]);
+  const inboxesTotal = summaryNumber(data.inboxes, ["total", "inboxes", "count"]);
+  const emailsTotal = summaryNumber(data.emails, ["total", "today", "count", "received_24h"]);
+  const apiKeysTotal = summaryNumber(data.apiKeys, ["active", "total", "count"]);
+
+  const upstreamReady = data.configured;
+
+  return (
+    <div className="space-y-4">
+      {!upstreamReady ? (
+        <div className="panel p-5">
+          <SectionTitle>Modih admin endpoints</SectionTitle>
+          <p className="text-sm text-fg-soft">
+            {data.needs.includes("MODIH_ADMIN_SECRET")
+              ? "MODIH_ADMIN_SECRET isn't set on lnch.in. Add it to Pages env to surface live counters here."
+              : "modih.in hasn't shipped the admin endpoints yet. Each section will hydrate as soon as the upstream is live."}
+          </p>
+          <a
+            href={data.fallbackUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex items-center gap-1 text-sm text-accent underline"
+          >
+            Open Modih admin <ArrowUpRight className="h-3 w-3" />
+          </a>
+        </div>
+      ) : (
+        <section className="poster-stagger grid gap-3 md:grid-cols-4">
+          <StatCard
+            label="Users"
+            value={usersTotal ?? "—"}
+            tone="gilt"
+            status={data.users.ok ? "from /admin/users/summary" : data.users.reason ?? "unavailable"}
+          />
+          <StatCard
+            label="Inboxes"
+            value={inboxesTotal ?? "—"}
+            tone="info"
+            status={
+              data.inboxes.ok ? "from /admin/inboxes/summary" : data.inboxes.reason ?? "unavailable"
+            }
+          />
+          <StatCard
+            label="Emails"
+            value={emailsTotal ?? "—"}
+            tone="neutral"
+            status={
+              data.emails.ok ? "from /admin/emails/summary" : data.emails.reason ?? "unavailable"
+            }
+          />
+          <StatCard
+            label="Active keys"
+            value={apiKeysTotal ?? "—"}
+            tone="neutral"
+            status={
+              data.apiKeys.ok
+                ? "from /admin/api-keys/summary"
+                : data.apiKeys.reason ?? "unavailable"
+            }
+          />
+        </section>
+      )}
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="panel p-5">
+          <SectionTitle hint="latest deliveries">Recent emails</SectionTitle>
+          <ModihList section={data.recentEmails} kind="email" />
+        </div>
+        <div className="panel p-5">
+          <SectionTitle hint="latest signups">Recent users</SectionTitle>
+          <ModihList section={data.recentSignups} kind="user" />
+        </div>
+      </div>
+
+      {data.abuse.ok && data.abuse.data ? (
+        <div className="panel p-5">
+          <SectionTitle hint="abuse / flagged events">Abuse signal</SectionTitle>
+          <FlatSnapshot data={data.abuse.data as Record<string, unknown>} />
+        </div>
+      ) : null}
+
+      <div className="panel p-5">
+        <SectionTitle>Safe actions</SectionTitle>
+        <p className="text-sm text-fg-soft">
+          Mutating actions require a typed confirmation token and are routed through lnch.in&apos;s
+          server-side proxy — the browser never sees{" "}
+          <code className="font-mono">MODIH_ADMIN_SECRET</code>. Use the{" "}
+          <Link to={`/ops/projects/modih/users`} className="text-accent underline">
+            Users
+          </Link>{" "}
+          or{" "}
+          <Link to={`/ops/projects/modih/api-keys`} className="text-accent underline">
+            API keys
+          </Link>{" "}
+          tabs to suspend a user, revoke a key, or delete an inbox. Allowlisted actions:{" "}
+          <code className="font-mono">users/:id/suspend</code>,{" "}
+          <code className="font-mono">users/:id/unsuspend</code>,{" "}
+          <code className="font-mono">api-keys/:id (DELETE)</code>,{" "}
+          <code className="font-mono">inboxes/:id (DELETE)</code>.
+        </p>
+        <a
+          href={data.fallbackUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-flex items-center gap-1 text-xs text-muted underline"
+        >
+          Fallback: open Modih&apos;s native admin <ArrowUpRight className="h-3 w-3" />
+        </a>
+      </div>
+
+      <p className="text-[11px] text-muted">
+        Source: <code className="font-mono">{data.base}</code> · admin proxy private to /ops · last
+        fetched {timeAgo(data.fetchedAt)}.
+      </p>
+    </div>
+  );
+}
+
+function ModihList({ section, kind }: { section: ModihNativeSection<unknown>; kind: "email" | "user" }) {
+  if (!section.ok) {
+    return <p className="text-sm text-fg-soft">{section.reason ?? "unavailable"}</p>;
+  }
+  const items = extractItems(section.data) ?? [];
+  if (items.length === 0) {
+    return (
+      <p className="text-sm text-fg-soft">
+        {kind === "email" ? "No recent emails." : "No recent signups."}
+      </p>
+    );
+  }
+  // RecordRow only knows about the four LaunchOps record kinds; both email
+  // and user rows are visually closest to the "user" treatment (avatar + ts).
+  const rowKind: "user" | "event" = kind === "email" ? "event" : "user";
+  return (
+    <ul className="divide-rule text-sm">
+      {items.slice(0, 6).map((it, i) => (
+        <li key={i} className="py-2">
+          <RecordRow item={it} kind={rowKind} />
+        </li>
+      ))}
+    </ul>
   );
 }
 
