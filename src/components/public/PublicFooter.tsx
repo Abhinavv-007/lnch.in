@@ -1,4 +1,5 @@
-import { Github } from "lucide-react";
+import { Github, Terminal } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function PublicFooter() {
   return (
@@ -8,14 +9,22 @@ export default function PublicFooter() {
         <p className="font-mono">
           <span className="text-accent">$</span> curl -s https://lnch.in/api/public/projects
         </p>
-        <a
-          href="https://github.com/Abhinavv-007"
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex items-center gap-1 hover:text-accent"
-        >
-          <Github className="h-3 w-3" /> github.com/Abhinavv-007
-        </a>
+        <div className="flex flex-wrap items-center gap-4">
+          <Link
+            to="/developers"
+            className="inline-flex items-center gap-1 hover:text-accent"
+          >
+            <Terminal className="h-3 w-3" /> /developers
+          </Link>
+          <a
+            href="https://github.com/Abhinavv-007"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 hover:text-accent"
+          >
+            <Github className="h-3 w-3" /> github.com/Abhinavv-007
+          </a>
+        </div>
       </div>
     </footer>
   );

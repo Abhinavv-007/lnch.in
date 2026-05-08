@@ -133,12 +133,12 @@ export default function LandingPage() {
             <a href="#projects" className="poster-button poster-button--primary">
               Browse projects
             </a>
+            <Link to="/developers" className="poster-button">
+              <Activity className="h-3.5 w-3.5" /> Public API
+            </Link>
             <Link to="/ops" className="poster-button">
               <Lock className="h-3.5 w-3.5" /> Operator console
             </Link>
-            <a href="#api" className="poster-button">
-              <Activity className="h-3.5 w-3.5" /> Public API
-            </a>
           </div>
           <div className="poster-footer-strip mt-10">
             <span className="poster-footer-strip__brand">
@@ -280,6 +280,11 @@ export default function LandingPage() {
                 <span className="poster-stamp"><code>GET /api/public/projects/:slug</code></span>
                 <span className="poster-stamp"><code>GET /api/public/probes</code></span>
                 <span className="poster-stamp"><code>GET /api/public/commits</code></span>
+              </div>
+              <div className="mt-5">
+                <Link to="/developers" className="poster-button poster-button--primary">
+                  <Activity className="h-3.5 w-3.5" /> Browse all endpoints &amp; copy curl
+                </Link>
               </div>
             </div>
             <div className="md:border-l md:border-rule md:pl-6">
