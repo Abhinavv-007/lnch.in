@@ -30,3 +30,22 @@ LAUNCHOPS_PUBLIC_NAME = "LaunchOps"
 # Keep secrets (LAUNCHOPS_ADMIN_SECRET, GITHUB_TOKEN, CLOUDFLARE_API_TOKEN,
 # VERCEL_TOKEN, MODIH_ADMIN_SECRET, FIREBASE_*) in Pages env vars or
 # `wrangler secret put` — never in this file.
+
+# ---------------------------------------------------------------------
+# Scheduled probe sweep
+#
+# Cloudflare Pages Functions don't expose a `scheduled()` handler today,
+# so the probe-history cadence is driven by an external scheduler hitting
+# the `/api/cron/probes` endpoint with the LAUNCHOPS_ADMIN_SECRET token.
+# Recommended schedulers (any one is enough):
+#
+#   1. Cloudflare Cron Trigger Worker (separate worker invokes fetch())
+#   2. cron-job.org / EasyCron / BetterStack heartbeats
+#   3. GitHub Actions on a `schedule:` trigger
+#
+# Suggested cadence: every 5 minutes.
+#   curl "https://lnch.in/api/cron/probes?token=$LAUNCHOPS_ADMIN_SECRET"
+#
+# The opportunistic on-visit refresh in `/api/public/projects` continues
+# to work and will keep data fresh whenever the landing page has traffic.
+# ---------------------------------------------------------------------
