@@ -10,6 +10,7 @@ import { VercelAdapter } from "../../../_adapters/vercel";
 import { CloudflareAdapter } from "../../../_adapters/cloudflare";
 import * as firebase from "../../../_adapters/firebase";
 import { ModihAdapter } from "../../../_adapters/modih";
+import { PortfolioAdapter } from "../../../_adapters/portfolio";
 import { ProjectAdminAdapter } from "../../../_adapters/projectAdmin";
 
 export const onRequestGet: PagesFunction<Env> = async ({ request, env, params }) => {
@@ -104,10 +105,14 @@ export const onRequestGet: PagesFunction<Env> = async ({ request, env, params })
   };
   if (slug === "modih") {
     admin = await new ModihAdapter(env).overview();
+  } else if (slug === "portfolio") {
+    // Portfolio doesn't have an admin API — it has a public read-only API
+    // at abhnv.in/api/*. The PortfolioAdapter speaks that surface and
+    // produces the same admin-shaped overview so the UI doesn't have to
+    // special-case it.
+    admin = await new PortfolioAdapter(env).overview();
   } else if (project.adminBaseUrl) {
     admin = await new ProjectAdminAdapter(env, project).overview();
-  } else if (slug === "portfolio") {
-    admin.plannedEndpoints = ["GET https://abhnv.in/api/admin/content/health", "GET https://abhnv.in/api/admin/seo"];
   }
 
   // Firebase analytics.

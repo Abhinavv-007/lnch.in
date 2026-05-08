@@ -349,16 +349,171 @@ function OverviewSection({ project, detail }: { project: Project; detail: Detail
         </div>
       ) : null}
 
+      {project.slug === "portfolio" ? <PortfolioPanel /> : null}
+
       <Link to={`/ops/projects/${project.slug}/users`} className="block">
         <div className="panel p-5 hover:border-accent">
           <SectionTitle>Admin module</SectionTitle>
           <p className="text-sm text-fg-soft">
-            {detail?.admin.available
-              ? "Admin endpoints connected. Browse users, keys, audit, security from the tabs above."
-              : "Project-side admin endpoints aren't shipped yet. lnch.in will surface real data once they exist."}
+            {project.slug === "portfolio"
+              ? "Portfolio is read-only — content surfaced from abhnv.in/api/* via lnch.in's KV-cached adapter."
+              : detail?.admin.available
+                ? "Admin endpoints connected. Browse users, keys, audit, security from the tabs above."
+                : "Project-side admin endpoints aren't shipped yet. lnch.in will surface real data once they exist."}
           </p>
         </div>
       </Link>
+    </div>
+  );
+}
+
+/* ---------- Portfolio: read-only content surfaced from abhnv.in/api/* ---------- */
+
+type PortfolioData = {
+  base: string;
+  fetchedAt: number;
+  summary: {
+    profile?: { name?: string; role?: string; location?: string; summary?: string };
+    counts?: Record<string, number>;
+  } | null;
+  projects: { title: string; slug: string; description?: string; type?: string; tags?: string[] }[];
+  certifications: { title: string; issuer?: string; date?: string }[];
+  research: { title: string; slug: string; abstract?: string }[];
+  notes: { title: string; body?: string; date?: string }[];
+};
+
+function PortfolioPanel() {
+  const [data, setData] = useState<PortfolioData | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    api
+      .get<PortfolioData>("/api/ops/projects/portfolio-data")
+      .then(setData)
+      .catch((e: Error) => setError(e?.message ?? "Failed to load Portfolio data"));
+  }, []);
+
+  if (error) {
+    return (
+      <div className="panel p-5 text-sm signal-err">Couldn&apos;t load Portfolio data: {error}</div>
+    );
+  }
+  if (!data) return <PanelSkeleton title="Portfolio content" />;
+
+  const counts = data.summary?.counts ?? {};
+  return (
+    <div className="space-y-4">
+      <section className="poster-stagger grid gap-3 md:grid-cols-4">
+        <StatCard
+          label="Projects"
+          value={counts.projects ?? data.projects.length}
+          tone="gilt"
+          status={`${data.projects.length} surfaced now`}
+        />
+        <StatCard
+          label="Certifications"
+          value={counts.certifications ?? data.certifications.length}
+          tone="info"
+        />
+        <StatCard label="Research" value={counts.research ?? data.research.length} tone="neutral" />
+        <StatCard label="Notes" value={counts.notes ?? data.notes.length} tone="neutral" />
+      </section>
+
+      <div className="panel p-5">
+        <SectionTitle hint={`${data.projects.length} from /api/projects`}>
+          Portfolio projects
+        </SectionTitle>
+        {data.projects.length ? (
+          <ul className="divide-rule text-sm">
+            {data.projects.slice(0, 8).map((p) => (
+              <li
+                key={p.slug}
+                className="grid grid-cols-[1fr_auto] items-baseline gap-3 py-2"
+              >
+                <span className="min-w-0">
+                  <span className="font-medium text-fg">{p.title}</span>{" "}
+                  <span className="text-xs text-muted">— {p.type ?? "project"}</span>
+                  {p.description ? (
+                    <p className="line-clamp-2 text-xs text-fg-soft">{p.description}</p>
+                  ) : null}
+                </span>
+                <a
+                  href={`https://abhnv.in/work/${p.slug}/`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs text-accent underline"
+                >
+                  case study
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-fg-soft">No projects returned by abhnv.in/api/projects.</p>
+        )}
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="panel p-5">
+          <SectionTitle hint={`${data.certifications.length} total`}>Recent credentials</SectionTitle>
+          {data.certifications.length ? (
+            <ul className="divide-rule text-sm">
+              {data.certifications.slice(0, 6).map((c) => (
+                <li key={c.title} className="flex items-baseline justify-between gap-3 py-2">
+                  <span className="min-w-0 truncate">{c.title}</span>
+                  <span className="whitespace-nowrap text-xs text-muted">
+                    {c.issuer ?? "—"}
+                    {c.date ? ` · ${c.date}` : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-fg-soft">
+              No credentials returned by abhnv.in/api/certifications.
+            </p>
+          )}
+        </div>
+
+        <div className="panel p-5">
+          <SectionTitle hint={`${data.research.length} papers`}>Research</SectionTitle>
+          {data.research.length ? (
+            <ul className="divide-rule text-sm">
+              {data.research.slice(0, 6).map((r) => (
+                <li key={r.slug} className="py-2">
+                  <p className="font-medium text-fg">{r.title}</p>
+                  {r.abstract ? (
+                    <p className="line-clamp-2 text-xs text-fg-soft">{r.abstract}</p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-fg-soft">No papers returned by abhnv.in/api/research.</p>
+          )}
+        </div>
+      </div>
+
+      {data.notes.length ? (
+        <div className="panel p-5">
+          <SectionTitle hint={`${data.notes.length} notes`}>Notes from the bench</SectionTitle>
+          <ul className="divide-rule text-sm">
+            {data.notes.slice(0, 5).map((n) => (
+              <li key={n.title} className="py-2">
+                <p className="font-medium text-fg">{n.title}</p>
+                {n.body ? (
+                  <p className="line-clamp-2 text-xs text-fg-soft">{n.body}</p>
+                ) : null}
+                {n.date ? <p className="mt-1 text-[11px] text-muted">{n.date}</p> : null}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <p className="text-[11px] text-muted">
+        Source: <code className="font-mono">{data.base}</code> · KV-cached for 60s · last
+        fetched {timeAgo(data.fetchedAt)}.
+      </p>
     </div>
   );
 }
