@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Bell, Command, Search, Activity, Plus, Eye } from "lucide-react";
+import { Command, Search, Plus, Eye, Settings } from "lucide-react";
 import { api } from "@/lib/api";
 import ThemeToggle from "@/components/public/ThemeToggle";
 
@@ -55,12 +55,16 @@ export default function Topbar({ onCommand }: { onCommand: () => void }) {
           <Eye className="h-3.5 w-3.5" />
           View public
         </a>
-        <button className="hidden h-9 w-9 items-center justify-center rounded-full border border-rule bg-paper-elev text-fg-soft hover:text-accent md:inline-flex" title="System health">
-          <Activity className="h-4 w-4" />
-        </button>
-        <button className="hidden h-9 w-9 items-center justify-center rounded-full border border-rule bg-paper-elev text-fg-soft hover:text-accent md:inline-flex" title="Notifications">
-          <Bell className="h-4 w-4" />
-        </button>
+        {/* Replaces the previous System-health + Notifications buttons:
+            both routed nowhere and the user flagged them as broken icons.
+            One Settings link that actually goes somewhere is the upgrade. */}
+        <Link
+          to="/ops/settings"
+          className="hidden h-9 w-9 items-center justify-center rounded-full border border-rule bg-paper-elev text-fg-soft hover:border-accent hover:text-accent md:inline-flex"
+          title="Settings"
+        >
+          <Settings className="h-4 w-4" />
+        </Link>
         <Link
           to="/ops/tasks?new=1"
           className="hidden items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-semibold sm:inline-flex"

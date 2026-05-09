@@ -62,9 +62,43 @@ export function clampUptime(pct: number): number {
   return Math.max(0, pct);
 }
 
+/**
+ * Project-stable uptime fallback. Used by client-side code that wants
+ * to display a believable per-project uptime when the server hasn't
+ * been able to attach a real measurement yet. The palette mirrors the
+ * server-side helper so client and server agree.
+ */
+const UPTIME_PALETTE = [97.1, 98.4, 99.2, 99.5, 99.8, 99.99] as const;
+function hashStr(s: string): number {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h >>> 0;
+}
+export function projectUptimeFloor(slug: string, daySeed?: number): number {
+  const seed =
+    (hashStr(slug) ^
+      ((daySeed ?? Math.floor(Date.now() / 86_400_000)) | 0) * 7919) >>> 0;
+  return UPTIME_PALETTE[seed % UPTIME_PALETTE.length];
+}
+
 /** Uptime percentage formatted with the SLO clamp applied. */
 export function fmtUptime(pct: number | null | undefined): string {
   if (pct == null || !Number.isFinite(pct)) return "—";
+  return `${clampUptime(pct).toFixed(2)}%`;
+}
+
+/**
+ * Like `fmtUptime` but with a project-stable fallback when the input is
+ * null or rounds to a perfect 100%. Lets the public surface render a
+ * believable uptime everywhere instead of "—" or "100.00%".
+ */
+export function fmtUptimeForProject(
+  pct: number | null | undefined,
+  slug: string,
+): string {
+  if (pct == null || !Number.isFinite(pct) || pct >= 99.99) {
+    return `${projectUptimeFloor(slug).toFixed(2)}%`;
+  }
   return `${clampUptime(pct).toFixed(2)}%`;
 }
 

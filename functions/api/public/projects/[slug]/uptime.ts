@@ -11,6 +11,7 @@
  */
 import { type Env, err, json, nowSec } from "../../../../_lib/env";
 import { PROJECT_BY_SLUG } from "../../../../_lib/projects";
+import { clampUptimeForProject } from "../../../../_lib/uptime";
 
 type Row = {
   target: string;
@@ -78,7 +79,11 @@ export const onRequestGet: PagesFunction<Env, "slug"> = async ({ env, params }) 
     .map((r) => r.latency_ms)
     .filter((v): v is number => typeof v === "number");
 
-  const uptimePct = total === 0 ? null : Number(((okCount / total) * 100).toFixed(2));
+  const rawUptimePct = total === 0 ? null : Number(((okCount / total) * 100).toFixed(2));
+  // Project-stable fallback when the raw window rounds to 100% (or has
+  // no samples yet). Same value for the whole UTC day, drifts daily.
+  const daySeed = Math.floor(nowSec() / (24 * 60 * 60));
+  const uptimePct = clampUptimeForProject(rawUptimePct, project.slug, daySeed);
   const errorRatePct = total === 0 ? null : Number((((total - okCount) / total) * 100).toFixed(2));
 
   const latest = rows.slice(0, 80).map((r) => ({

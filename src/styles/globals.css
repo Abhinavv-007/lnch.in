@@ -66,6 +66,11 @@
 html {
   scroll-behavior: smooth;
   background: var(--bg);
+  /* `clip` crops any element that would extend past the viewport
+     horizontally without surfacing a scrollbar. Heatmap & GitHub-calendar
+     tooltips used to push the page wider on hover; this kills the
+     flickering horizontal scrollbar without swallowing focus rings. */
+  overflow-x: clip;
 }
 
 body {
@@ -74,6 +79,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  overflow-x: clip;
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -940,6 +946,8 @@ main > div,
   --heatmap-tier-3: rgba(238, 145, 75, 0.80);
   --heatmap-tier-4: rgba(225, 95, 80, 0.88);
 }
+/* Legacy day-by-hour grid (kept for completeness; the public heatmap now
+   reuses the GitHub-style year grid below). */
 .heatmap-grid {
   display: grid;
   grid-template-columns: 44px repeat(24, 1fr);

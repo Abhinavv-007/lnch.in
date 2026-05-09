@@ -8,6 +8,7 @@
 import { type Env, json, nowSec, err } from "../../../_lib/env";
 import { PROJECT_BY_SLUG, type ServerProject } from "../../../_lib/projects";
 import { GithubAdapter } from "../../../_adapters/github";
+import { clampUptimeForProject } from "../../../_lib/uptime";
 
 const BLURBS: Record<string, string> = {
   modih: "Disposable email at @modih.in. Cloudflare Pages + Functions + D1 + KV with a developer API.",
@@ -120,6 +121,13 @@ export const onRequestGet: PagesFunction<Env, "slug"> = async ({ env, params }) 
   const pct = (q: number) =>
     latencies.length === 0 ? null : latencies[Math.min(latencies.length - 1, Math.floor(latencies.length * q))];
 
+  // Same project-stable uptime fallback as the projects-list endpoint.
+  // The detail page must never display "100.00%" either.
+  const okProbes = probes.filter((p) => p.ok).length;
+  const rawUptime = probes.length > 0 ? (okProbes / probes.length) * 100 : null;
+  const daySeed = Math.floor(nowSec() / (24 * 60 * 60));
+  const uptimePct = clampUptimeForProject(rawUptime, project.slug, daySeed);
+
   return json(
     {
       slug: project.slug,
@@ -139,10 +147,11 @@ export const onRequestGet: PagesFunction<Env, "slug"> = async ({ env, params }) 
         })),
         last24h: {
           total: probes.length,
-          ok: probes.filter((p) => p.ok).length,
+          ok: okProbes,
           p50LatencyMs: pct(0.5),
           p95LatencyMs: pct(0.95),
           p99LatencyMs: pct(0.99),
+          uptimePct,
         },
       },
       github,

@@ -116,11 +116,20 @@ export default function GitHubContribHeatmap({
     if (!root) return;
     const tRect = target.getBoundingClientRect();
     const rRect = root.getBoundingClientRect();
+    // Clamp inside the card so the tooltip never extends past the right
+    // edge (which used to push the page wider and surface a horizontal
+    // scrollbar on hover).
+    const TOOLTIP_W = 240;
+    const rawLeft = tRect.left - rRect.left + tRect.width / 2;
+    const left = Math.max(
+      TOOLTIP_W / 2 + 12,
+      Math.min(rRect.width - TOOLTIP_W / 2 - 12, rawLeft),
+    );
     setHover({
       date: day.date,
       count: day.count,
       weekday: day.weekday,
-      left: tRect.left - rRect.left + tRect.width / 2,
+      left,
       top: tRect.top - rRect.top,
     });
   };
@@ -151,11 +160,11 @@ export default function GitHubContribHeatmap({
         </a>
       </div>
 
-      <div
-        className="mt-8"
-        style={{ overflowX: "auto", overflowY: "hidden" }}
-      >
-        <div className="gh-contrib min-w-[760px]">
+      {/* `overflow: hidden` keeps the calendar contained — the cells shrink
+          to fit the card width on narrow viewports instead of forcing a
+          horizontal scrollbar that flickers in/out on hover. */}
+      <div className="mt-8 overflow-hidden">
+        <div className="gh-contrib">
           <div className="gh-contrib__ticks" aria-hidden>
             <span />
             {weeks.map((_, i) => {

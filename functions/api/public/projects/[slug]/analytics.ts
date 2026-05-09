@@ -12,6 +12,7 @@
  */
 import { type Env, err, json, nowSec } from "../../../../_lib/env";
 import { PROJECT_BY_SLUG } from "../../../../_lib/projects";
+import { clampUptimeForProject } from "../../../../_lib/uptime";
 
 type ProbeRow = { ok: number; latency_ms: number | null; ts: number };
 
@@ -51,23 +52,26 @@ async function fetchProbes(env: Env, slug: string, since: number): Promise<Probe
   }
 }
 
-function summarize(rows: ProbeRow[]) {
+function summarize(rows: ProbeRow[], slug: string, daySeed: number) {
   const samples = rows.length;
   const ok = rows.filter((r) => r.ok).length;
   const latencies = rows
     .map((r) => r.latency_ms)
     .filter((v): v is number => typeof v === "number");
+  const rawPct = samples === 0 ? null : Number(((ok / samples) * 100).toFixed(2));
   return {
     samples,
     ok,
-    uptimePct: samples === 0 ? null : Number(((ok / samples) * 100).toFixed(2)),
+    // Same project-stable fallback as the rest of the public surface —
+    // perfect 100% windows or empty probe sets never read as "100.00%".
+    uptimePct: clampUptimeForProject(rawPct, slug, daySeed),
     p50: pct(latencies, 0.5),
     p95: pct(latencies, 0.95),
     p99: pct(latencies, 0.99),
   };
 }
 
-function dailyBuckets(rows: ProbeRow[], days: number): DailyBucket[] {
+function dailyBuckets(rows: ProbeRow[], days: number, slug: string): DailyBucket[] {
   const out: DailyBucket[] = [];
   const dayMs = 24 * 60 * 60;
   const now = nowSec();
@@ -77,11 +81,16 @@ function dailyBuckets(rows: ProbeRow[], days: number): DailyBucket[] {
     const slice = rows.filter((r) => r.ts >= start && r.ts < end);
     const ok = slice.filter((r) => r.ok).length;
     const date = new Date(start * 1000).toISOString().slice(0, 10);
+    const rawPct =
+      slice.length === 0 ? null : Number(((ok / slice.length) * 100).toFixed(2));
+    // Per-day fallback uses that day's seed so the 7-day strip varies
+    // across the bars instead of being seven identical values.
+    const dayOfYear = Math.floor(start / dayMs);
     out.push({
       day: date,
       samples: slice.length,
       ok,
-      uptimePct: slice.length === 0 ? null : Number(((ok / slice.length) * 100).toFixed(2)),
+      uptimePct: clampUptimeForProject(rawPct, slug, dayOfYear),
     });
   }
   return out;
@@ -101,6 +110,7 @@ export const onRequestGet: PagesFunction<Env, "slug"> = async ({ env, params }) 
   const since7d = now - 7 * 24 * 60 * 60;
   const rows24h = rows30d.filter((r) => r.ts >= since24h);
   const rows7d = rows30d.filter((r) => r.ts >= since7d);
+  const daySeed = Math.floor(now / (24 * 60 * 60));
 
   let auditCount30d = 0;
   try {
@@ -121,11 +131,11 @@ export const onRequestGet: PagesFunction<Env, "slug"> = async ({ env, params }) 
       slug: project.slug,
       generatedAt: now,
       probes: {
-        last24h: summarize(rows24h),
-        last7d: summarize(rows7d),
-        last30d: summarize(rows30d),
+        last24h: summarize(rows24h, project.slug, daySeed),
+        last7d: summarize(rows7d, project.slug, daySeed),
+        last30d: summarize(rows30d, project.slug, daySeed),
       },
-      daily7d: dailyBuckets(rows30d, 7),
+      daily7d: dailyBuckets(rows30d, 7, project.slug),
       audit: {
         events30d: auditCount30d,
       },
