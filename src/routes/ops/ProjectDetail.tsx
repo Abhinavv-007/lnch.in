@@ -223,6 +223,7 @@ export default function ProjectDetail() {
       {active === "audit" && <AuditSection project={project} />}
       {active === "deployments" && <DeploymentsSection detail={detail} />}
       {active === "changelog" && <ChangelogSection project={project} detail={detail} />}
+      {active === "incidents" && <IncidentsSection project={project} />}
       {active === "security" && <SecuritySection project={project} />}
       {active === "tasks" && <TasksSection project={project} />}
       {active === "notes" && <NotesSection project={project} />}
@@ -966,19 +967,380 @@ function ChangelogSection({ project, detail }: { project: Project; detail: Detai
   );
 }
 
+/* ---------- 8b. Incidents ---------- */
+
+type Incident = {
+  id: number;
+  project_slug: string | null;
+  title: string;
+  severity: "minor" | "major" | "critical" | string;
+  status: "open" | "monitoring" | "resolved" | string;
+  notes: string | null;
+  opened_at: number;
+  resolved_at: number | null;
+};
+
+function IncidentsSection({ project }: { project: Project }) {
+  const [incidents, setIncidents] = useState<Incident[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [draft, setDraft] = useState({
+    title: "",
+    severity: "minor",
+    status: "open",
+    notes: "",
+  });
+  const [busy, setBusy] = useState(false);
+
+  const reload = () => {
+    api
+      .get<{ incidents: Incident[] }>(
+        `/api/ops/incidents?project=${encodeURIComponent(project.slug)}`,
+      )
+      .then((r) => setIncidents(r.incidents))
+      .catch((e: Error) => setError(e?.message ?? "Failed to load incidents"));
+  };
+
+  useEffect(() => {
+    reload();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project.slug]);
+
+  const handleCreate = async () => {
+    if (!draft.title.trim() || busy) return;
+    setBusy(true);
+    try {
+      await api.post("/api/ops/incidents", {
+        project_slug: project.slug,
+        title: draft.title.trim(),
+        severity: draft.severity,
+        status: draft.status,
+        notes: draft.notes.trim() || null,
+      });
+      setDraft({ title: "", severity: "minor", status: "open", notes: "" });
+      setCreating(false);
+      reload();
+    } catch (e) {
+      setError((e as Error)?.message ?? "Failed to create incident");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleStatus = async (id: number, status: string) => {
+    setBusy(true);
+    try {
+      await api.patch("/api/ops/incidents", { id, status });
+      reload();
+    } catch (e) {
+      setError((e as Error)?.message ?? "Failed to update incident");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const open = incidents?.filter((i) => i.status !== "resolved") ?? [];
+  const resolved = incidents?.filter((i) => i.status === "resolved") ?? [];
+
+  return (
+    <div className="space-y-4">
+      <section className="poster-stagger grid gap-3 md:grid-cols-3">
+        <StatCard
+          label="Open"
+          value={incidents == null ? "…" : open.length}
+          tone={open.length === 0 ? "ok" : open.some((i) => i.severity === "critical") ? "err" : "warn"}
+          status={open.length === 0 ? "all clear" : `${open.length} active`}
+        />
+        <StatCard
+          label="Resolved · all-time"
+          value={incidents == null ? "…" : resolved.length}
+          tone="info"
+        />
+        <StatCard
+          label="Last opened"
+          value={
+            incidents == null
+              ? "…"
+              : incidents[0]
+                ? timeAgo(incidents[0].opened_at)
+                : "—"
+          }
+          tone="neutral"
+        />
+      </section>
+
+      <div className="panel p-5">
+        <SectionTitle
+          hint={`${incidents?.length ?? 0} total · scoped to ${project.name}`}
+          action={
+            <button
+              type="button"
+              className="btn-ghost text-xs"
+              onClick={() => setCreating((c) => !c)}
+            >
+              {creating ? "Cancel" : "New incident"}
+            </button>
+          }
+        >
+          Incident log
+        </SectionTitle>
+
+        {creating ? (
+          <div className="mb-4 grid gap-2 rounded-md border border-rule-soft bg-paper-elev p-3">
+            <input
+              className="rounded-md border border-rule bg-paper px-3 py-2 text-sm"
+              placeholder="Title (e.g. Cloudflare incident — clex.in 5xx)"
+              value={draft.title}
+              onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+            />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <select
+                className="rounded-md border border-rule bg-paper px-3 py-2 text-sm"
+                value={draft.severity}
+                onChange={(e) => setDraft({ ...draft, severity: e.target.value })}
+              >
+                <option value="minor">minor</option>
+                <option value="major">major</option>
+                <option value="critical">critical</option>
+              </select>
+              <select
+                className="rounded-md border border-rule bg-paper px-3 py-2 text-sm"
+                value={draft.status}
+                onChange={(e) => setDraft({ ...draft, status: e.target.value })}
+              >
+                <option value="open">open</option>
+                <option value="monitoring">monitoring</option>
+                <option value="resolved">resolved</option>
+              </select>
+            </div>
+            <textarea
+              className="min-h-[64px] rounded-md border border-rule bg-paper px-3 py-2 text-sm"
+              placeholder="Notes (root cause, mitigation, follow-ups)…"
+              value={draft.notes}
+              onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
+            />
+            <div className="flex justify-end">
+              <button
+                type="button"
+                className="btn-primary text-xs"
+                disabled={busy || !draft.title.trim()}
+                onClick={handleCreate}
+              >
+                {busy ? "saving…" : "open incident"}
+              </button>
+            </div>
+          </div>
+        ) : null}
+
+        {error ? <p className="mb-2 text-xs signal-err">{error}</p> : null}
+        {incidents === null ? (
+          <DotPulse label="loading" />
+        ) : incidents.length === 0 ? (
+          <p className="text-sm text-fg-soft">
+            No incidents recorded for {project.name} yet. That&apos;s a good day.
+          </p>
+        ) : (
+          <ul className="divide-rule text-sm">
+            {incidents.map((i) => (
+              <li key={i.id} className="grid grid-cols-[auto_1fr_auto] items-start gap-3 py-3">
+                <span
+                  className={
+                    i.severity === "critical"
+                      ? "pill-err"
+                      : i.severity === "major"
+                        ? "pill-warn"
+                        : "pill"
+                  }
+                >
+                  {i.severity}
+                </span>
+                <div className="min-w-0">
+                  <p className="font-medium text-fg">
+                    <span
+                      className={
+                        i.status === "resolved"
+                          ? "pill-ok"
+                          : i.status === "monitoring"
+                            ? "pill-info"
+                            : "pill-warn"
+                      }
+                    >
+                      {i.status}
+                    </span>{" "}
+                    {i.title}
+                  </p>
+                  {i.notes ? (
+                    <p className="line-clamp-2 text-xs text-fg-soft">{i.notes}</p>
+                  ) : null}
+                  <p className="mt-1 text-[11px] text-muted">
+                    opened {timeAgo(i.opened_at)}
+                    {i.resolved_at ? ` · resolved ${timeAgo(i.resolved_at)}` : ""}
+                  </p>
+                </div>
+                <div className="flex shrink-0 flex-wrap items-center gap-1">
+                  {i.status !== "monitoring" && i.status !== "resolved" ? (
+                    <button
+                      type="button"
+                      className="btn-ghost text-[11px]"
+                      disabled={busy}
+                      onClick={() => handleStatus(i.id, "monitoring")}
+                    >
+                      monitor
+                    </button>
+                  ) : null}
+                  {i.status !== "resolved" ? (
+                    <button
+                      type="button"
+                      className="btn-ghost text-[11px]"
+                      disabled={busy}
+                      onClick={() => handleStatus(i.id, "resolved")}
+                    >
+                      resolve
+                    </button>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ---------- 9. Security ---------- */
 
 function SecuritySection({ project }: { project: Project }) {
   const t = useAdminTopic(project.slug, "security");
+  const [auditEvents, setAuditEvents] = useState<{ id: number; ts: number; actor: string | null; action: string; ip: string | null; target: string | null }[] | null>(
+    null,
+  );
+  const [stats, setStats] = useState<{
+    failedLogins: number;
+    keyRevocations: number;
+    incidents: number;
+    auditWindowDays: number;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      api
+        .get<{
+          events: { id: number; ts: number; actor: string | null; action: string; ip: string | null; target: string | null }[];
+        }>("/api/ops/audit?limit=50")
+        .catch(() => ({ events: [] })),
+      api
+        .get<{ incidents: { id: number; status: string }[] }>(
+          `/api/ops/incidents?project=${encodeURIComponent(project.slug)}`,
+        )
+        .catch(() => ({ incidents: [] })),
+    ]).then(([a, inc]) => {
+      if (cancelled) return;
+      // Filter audit events to security-shaped ones (auth, key, role).
+      const secEvents = (a.events ?? []).filter((e) =>
+        /^(auth\.|key\.|api-key\.|role\.|access\.|incident\.|user\.suspend|user\.unsuspend)/.test(
+          e.action,
+        ),
+      );
+      setAuditEvents(secEvents.slice(0, 20));
+      setStats({
+        failedLogins: (a.events ?? []).filter((e) => e.action === "auth.login.fail").length,
+        keyRevocations: (a.events ?? []).filter((e) =>
+          /(api-key|key)\.revoke/.test(e.action),
+        ).length,
+        incidents: (inc.incidents ?? []).filter((i) => i.status !== "resolved").length,
+        auditWindowDays: 30,
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [project.slug]);
+
   return (
-    <TopicPanel
-      title={`${project.name} security posture`}
-      topicState={t}
-      project={project}
-      empty="No security data returned by the admin /security endpoint."
-    >
-      {(data) => <FlatSnapshot data={data} />}
-    </TopicPanel>
+    <div className="space-y-4">
+      <section className="poster-stagger grid gap-3 md:grid-cols-4">
+        <StatCard
+          label="Failed logins · 30d"
+          value={stats == null ? "…" : stats.failedLogins}
+          tone={stats && stats.failedLogins > 5 ? "warn" : "ok"}
+          status="from launchops_audit"
+        />
+        <StatCard
+          label="Keys revoked · 30d"
+          value={stats == null ? "…" : stats.keyRevocations}
+          tone="info"
+        />
+        <StatCard
+          label="Open incidents"
+          value={stats == null ? "…" : stats.incidents}
+          tone={stats && stats.incidents > 0 ? "warn" : "ok"}
+        />
+        <StatCard
+          label="Admin secret"
+          value={project.adminSecretEnv ?? "LAUNCHOPS_ADMIN_SECRET"}
+          tone="neutral"
+        />
+      </section>
+
+      <div className="panel p-5">
+        <SectionTitle
+          hint={`${auditEvents?.length ?? 0} security events`}
+          action={
+            <Link to="/ops/audit" className="btn-ghost text-xs">
+              Open audit center
+            </Link>
+          }
+        >
+          Recent security trail
+        </SectionTitle>
+        {auditEvents === null ? (
+          <DotPulse label="loading" />
+        ) : auditEvents.length === 0 ? (
+          <p className="text-sm text-fg-soft">
+            No security-shaped audit events in the last 50 entries. The trail
+            covers auth, API-key lifecycle, role changes, suspensions, and
+            incident state changes.
+          </p>
+        ) : (
+          <ul className="divide-rule text-sm">
+            {auditEvents.map((e) => (
+              <li key={e.id} className="grid grid-cols-[auto_1fr_auto] items-baseline gap-3 py-2">
+                <span
+                  className={
+                    e.action.endsWith(".fail")
+                      ? "pill-err"
+                      : e.action.startsWith("auth.")
+                        ? "pill-info"
+                        : "pill"
+                  }
+                >
+                  {e.action}
+                </span>
+                <span className="min-w-0 truncate text-fg-soft">
+                  {e.actor ?? "—"}
+                  {e.target ? ` · ${e.target}` : ""}
+                </span>
+                <span className="shrink-0 whitespace-nowrap text-[11px] text-muted">
+                  {timeAgo(e.ts)}
+                  {e.ip ? ` · ${e.ip}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <TopicPanel
+        title={`${project.name} upstream security posture`}
+        topicState={t}
+        project={project}
+        empty="No security data returned by the admin /security endpoint."
+      >
+        {(data) => <FlatSnapshot data={data} />}
+      </TopicPanel>
+    </div>
   );
 }
 
