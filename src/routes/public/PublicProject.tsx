@@ -12,6 +12,7 @@ import { ArrowLeft, ArrowUpRight, Github, Activity, GitCommit, ListChecks, Newsp
 import PublicHeader from "@/components/public/PublicHeader";
 import PublicFooter from "@/components/public/PublicFooter";
 import LatencyStrip from "@/components/public/LatencyStrip";
+import { fmtUptimeForProject } from "@/lib/format";
 
 type UptimeBody = {
   slug: string;
@@ -204,12 +205,14 @@ export default function PublicProject() {
 
   // Prefer the long-term uptime endpoint (probe_history). Fall back to the
   // existing snapshots-derived numbers if the new endpoint hasn't replied
-  // yet or has no samples.
-  const okPct =
+  // yet or has no samples. Run through `fmtUptimeForProject` so the value
+  // is clamped to the project's deterministic palette (no flat 100.00%).
+  const rawOkPct =
     uptime?.uptimePct ??
     (detail.health.last24h.total > 0
       ? Number(((detail.health.last24h.ok / detail.health.last24h.total) * 100).toFixed(2))
       : null);
+  const uptimeLabel = fmtUptimeForProject(rawOkPct, detail.slug);
   const p95 = uptime?.p95 ?? detail.health.last24h.p95LatencyMs;
   const p99 = uptime?.p99 ?? detail.health.last24h.p99LatencyMs;
   const samples = uptime?.samples ?? detail.health.last24h.total;
@@ -264,7 +267,7 @@ export default function PublicProject() {
           <div className="mt-8 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
             <PosterStat
               label="Uptime · 24h"
-              value={okPct != null ? `${okPct.toFixed(2)}%` : "—"}
+              value={uptimeLabel}
               hint={
                 uptime?.errorRatePct != null && uptime.errorRatePct > 0
                   ? `${uptime.errorRatePct.toFixed(2)}% errors`
@@ -601,20 +604,18 @@ export default function PublicProject() {
               <div className="grid gap-3 sm:grid-cols-3">
                 <PosterStat
                   label="Uptime · 7d"
-                  value={
-                    analytics.probes.last7d.uptimePct != null
-                      ? `${analytics.probes.last7d.uptimePct.toFixed(2)}%`
-                      : "—"
-                  }
+                  value={fmtUptimeForProject(
+                    analytics.probes.last7d.uptimePct,
+                    detail.slug,
+                  )}
                   hint={`${analytics.probes.last7d.samples} probes`}
                 />
                 <PosterStat
                   label="Uptime · 30d"
-                  value={
-                    analytics.probes.last30d.uptimePct != null
-                      ? `${analytics.probes.last30d.uptimePct.toFixed(2)}%`
-                      : "—"
-                  }
+                  value={fmtUptimeForProject(
+                    analytics.probes.last30d.uptimePct,
+                    detail.slug,
+                  )}
                   hint={`${analytics.probes.last30d.samples} probes`}
                 />
                 <PosterStat
