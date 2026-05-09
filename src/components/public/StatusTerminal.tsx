@@ -1,10 +1,17 @@
 import { useEffect, useState } from "react";
+import { fmtLatency } from "@/lib/format";
 
 type ProjectSummary = {
   slug: string;
   name: string;
   health: { state: "ok" | "warn" | "err" | "unknown"; ok: number; targets: number };
-  last24h: { p95LatencyMs: number | null; ok: number; probes: number };
+  last24h: {
+    p95LatencyMs: number | null;
+    ok: number;
+    probes: number;
+    /** Server-side clamped uptime (<100%, Cloudflare SLO floor). */
+    uptimePct?: number | null;
+  };
   latestProbe: { latencyMs: number | null; ts: number; status: number | null } | null;
 };
 
@@ -63,9 +70,9 @@ export default function StatusTerminal({ projects }: { projects: ProjectSummary[
           const tag = STATE_LABEL[p.health.state];
           const lat =
             p.latestProbe?.latencyMs != null
-              ? `${p.latestProbe.latencyMs}ms`
+              ? fmtLatency(p.latestProbe.latencyMs)
               : p.last24h.p95LatencyMs != null
-                ? `${p.last24h.p95LatencyMs}ms p95`
+                ? `${fmtLatency(p.last24h.p95LatencyMs)} p95`
                 : "—";
           return (
             <div key={p.slug} className="flex flex-wrap items-center gap-x-4">

@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import CursorGlow from "./components/common/CursorGlow";
+import ParticleField from "./components/common/ParticleField";
 import LandingPage from "./routes/public/Landing";
 import PublicProject from "./routes/public/PublicProject";
 import DevelopersPage from "./routes/public/Developers";
@@ -27,7 +27,7 @@ import NotFound from "./routes/public/NotFound";
 export default function App() {
   return (
     <>
-      <CursorGlow />
+      <ParticleField />
       <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/projects/:slug" element={<PublicProject />} />

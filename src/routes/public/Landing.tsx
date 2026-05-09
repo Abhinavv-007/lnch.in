@@ -12,17 +12,19 @@
  * than ad-hoc cards floating on a generic SaaS background.
  */
 import { useEffect, useMemo, useState } from "react";
-import { Lock, Activity, Github } from "lucide-react";
+import { Lock, Activity, Github, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import PublicHeader from "@/components/public/PublicHeader";
 import PublicFooter from "@/components/public/PublicFooter";
 import StatusTerminal from "@/components/public/StatusTerminal";
-import LatencyStrip from "@/components/public/LatencyStrip";
+import LatencyStrip, { type LatencyPoint } from "@/components/public/LatencyStrip";
 import CommitTicker, { type Commit } from "@/components/public/CommitTicker";
 import ProjectCard, { type ProjectSummary } from "@/components/public/ProjectCard";
 import HeatmapPoster, { type HeatmapData } from "@/components/public/HeatmapPoster";
 import GitHubContribHeatmap, { type ContribData } from "@/components/public/GitHubContribHeatmap";
+import ContactCard from "@/components/public/ContactCard";
 import { useHashScroll } from "@/lib/useHashScroll";
+import { fmtLatency } from "@/lib/format";
 
 type ProjectsResponse = {
   generatedAt: number;
@@ -96,12 +98,13 @@ export default function LandingPage() {
     return Math.round(valid.reduce((s, v) => s + v, 0) / valid.length);
   }, [probes]);
 
-  const allLatencyPoints = useMemo(() => {
+  const allLatencyPoints = useMemo<LatencyPoint[]>(() => {
     if (!probes?.probes?.length) return [];
     return probes.probes
       .flatMap((p) => p.latest)
       .sort((a, b) => b.ts - a.ts)
-      .slice(0, 80);
+      .slice(0, 80)
+      .map((s) => ({ ts: s.ts, latencyMs: s.latencyMs, ok: s.ok }));
   }, [probes]);
 
   return (
@@ -178,7 +181,7 @@ export default function LandingPage() {
             <div>
               <p className="poster-eyebrow">latency · last 24h</p>
               <p className="mt-2 font-serif text-3xl text-fg">
-                {aggregateP95 != null ? `${aggregateP95}ms` : "—"}{" "}
+                {fmtLatency(aggregateP95)}{" "}
                 <span className="font-mono text-xs uppercase tracking-[0.28em] text-muted">
                   avg p95 across {probes?.probes?.length ?? 0} probes
                 </span>
@@ -259,6 +262,24 @@ export default function LandingPage() {
           }
         />
         <CommitTicker commits={commits?.commits ?? null} />
+      </section>
+
+      {/* Contact / support — Resend-backed */}
+      <section id="contact" className="mx-auto max-w-6xl px-6 pb-16">
+        <PosterHeading
+          eyebrow="say hi"
+          headline={
+            <>
+              Send a <span className="accent">message</span>
+            </>
+          }
+          aside={
+            <>
+              <Mail className="inline h-3 w-3" /> 67@abhnv.in
+            </>
+          }
+        />
+        <ContactCard />
       </section>
 
       {/* Public API banner */}

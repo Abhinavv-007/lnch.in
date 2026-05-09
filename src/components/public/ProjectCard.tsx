@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Github, Globe, Smartphone, ArrowUpRight } from "lucide-react";
 import { type ProjectSummary as StatusProjectSummary } from "@/components/public/StatusTerminal";
+import { fmtLatency, fmtUptime } from "@/lib/format";
 
 /**
  * Card-level project shape. Extends the canonical `StatusTerminal`
@@ -32,10 +33,16 @@ const STATE_LABEL: Record<NonNullable<ProjectSummary["health"]>["state"], string
  * border so it feels alive without becoming a generic SaaS box.
  */
 export default function ProjectCard({ project }: { project: ProjectSummary }) {
+  // Public surface uptime: prefer the server-side clamped value (`uptimePct`,
+  // bounded to <100% per Cloudflare's own SLO floor); fall back to deriving
+  // it from probe counts and clamping client-side. Either way, we never
+  // display a perfect 100.00% reading.
   const okPct =
-    project.last24h && project.last24h.probes
-      ? (project.last24h.ok / project.last24h.probes) * 100
-      : null;
+    typeof project.last24h?.uptimePct === "number"
+      ? project.last24h.uptimePct
+      : project.last24h && project.last24h.probes
+        ? (project.last24h.ok / project.last24h.probes) * 100
+        : null;
   const state = project.health?.state ?? "unknown";
   const stamp =
     state === "ok"
@@ -63,14 +70,8 @@ export default function ProjectCard({ project }: { project: ProjectSummary }) {
       </div>
 
       <div className="grid grid-cols-2 gap-2 text-xs">
-        <Stat
-          label="Uptime · 24h"
-          value={okPct != null ? `${okPct.toFixed(2)}%` : "—"}
-        />
-        <Stat
-          label="p95 · 24h"
-          value={project.last24h?.p95LatencyMs != null ? `${project.last24h.p95LatencyMs}ms` : "—"}
-        />
+        <Stat label="Uptime · 24h" value={fmtUptime(okPct)} />
+        <Stat label="p95 · 24h" value={fmtLatency(project.last24h?.p95LatencyMs ?? null)} />
       </div>
 
       <div className="mt-auto flex flex-wrap items-center gap-2 pt-1 text-xs text-muted">
