@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
  * Public footer.
  *
  * Three lanes on md+:
- *   1) tagline    — © year · "built on Cloudflare · everything is open source"
+ *   1) tagline    — © year · /version link
  *   2) curl tease — short example of the public registry endpoint
  *   3) socials    — /developers · LinkedIn · GitHub · email
  *
@@ -16,7 +16,12 @@ export default function PublicFooter() {
   return (
     <footer className="border-t border-rule bg-paper-soft">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 text-xs text-fg-soft md:flex-row md:items-center md:justify-between">
-        <p>© {new Date().getFullYear()} lnch.in · built on Cloudflare · everything is open source</p>
+        <p>
+          © {new Date().getFullYear()} lnch.in ·{" "}
+          <Link to="/#versions" className="hover:text-accent">
+            release log
+          </Link>
+        </p>
         <p className="font-mono break-all">
           <span className="text-accent">$</span> curl -s https://lnch.in/api/public/projects
         </p>
@@ -45,11 +50,11 @@ export default function PublicFooter() {
             <Github className="h-3 w-3" /> github.com/Abhinavv-007
           </a>
           <a
-            href="mailto:67@abhnv.in"
+            href="mailto:abhnv@abhnv.in"
             className="inline-flex items-center gap-1 hover:text-accent"
-            aria-label="Email — 67@abhnv.in"
+            aria-label="Email — abhnv@abhnv.in"
           >
-            <Mail className="h-3 w-3" /> 67@abhnv.in
+            <Mail className="h-3 w-3" /> abhnv@abhnv.in
           </a>
         </div>
       </div>
