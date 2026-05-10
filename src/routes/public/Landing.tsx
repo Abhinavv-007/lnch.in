@@ -282,11 +282,14 @@ export default function LandingPage() {
         <ContactCard />
       </section>
 
-      {/* Public API banner */}
+      {/* Public API banner. The right column owns a terminal block that
+          can otherwise push the grid wider than the viewport on mobile —
+          we set `min-w-0` on both columns so `overflow-x-auto` on the
+          <pre> kicks in correctly instead of forcing a page-level scroll. */}
       <section id="api" className="mx-auto max-w-6xl px-6 pb-24">
         <div className="poster-card overflow-hidden">
           <div className="grid gap-6 md:grid-cols-2 md:gap-8">
-            <div>
+            <div className="min-w-0">
               <p className="poster-eyebrow">public API</p>
               <h2 className="poster-headline poster-headline--md mt-2">
                 Run it from your <span className="accent">terminal</span>
@@ -308,8 +311,8 @@ export default function LandingPage() {
                 </Link>
               </div>
             </div>
-            <div className="md:border-l md:border-rule md:pl-6">
-              <pre className="terminal overflow-x-auto rounded-xl p-4">
+            <div className="min-w-0 md:border-l md:border-rule md:pl-6">
+              <pre className="terminal overflow-x-auto rounded-xl p-4 text-[0.78rem] sm:text-sm">
                 <code className="block whitespace-pre">
                   <span className="term-prompt">$</span>{" "}
                   <span className="term-cmd">curl -s https://lnch.in/api/public/projects | jq '.counts'</span>

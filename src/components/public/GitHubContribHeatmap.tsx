@@ -1,5 +1,5 @@
 import { Github } from "lucide-react";
-import { useRef, useState, type CSSProperties, type MouseEvent, type FocusEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type FocusEvent } from "react";
 import { fmtCount } from "@/lib/format";
 
 /**
@@ -101,7 +101,19 @@ export default function GitHubContribHeatmap({
   const ticks = monthTicks(weeks);
   const total = data?.totalContributions ?? 0;
   const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<HoverInfo | null>(null);
+
+  // Land on today on mobile so the most recent activity is visible first.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || weeks.length === 0) return;
+    if (typeof window === "undefined") return;
+    if (window.innerWidth > 720) return;
+    requestAnimationFrame(() => {
+      el.scrollLeft = el.scrollWidth;
+    });
+  }, [weeks.length]);
   let peak: ContribDay | null = null;
   for (const w of weeks) {
     for (const d of w.days) {
@@ -160,10 +172,12 @@ export default function GitHubContribHeatmap({
         </a>
       </div>
 
-      {/* `overflow: hidden` keeps the calendar contained — the cells shrink
-          to fit the card width on narrow viewports instead of forcing a
-          horizontal scrollbar that flickers in/out on hover. */}
-      <div className="mt-8 overflow-hidden">
+      {/* On desktop the calendar fits the card width; on mobile it
+          switches to a fixed 11px cell + horizontal scroll with a hidden
+          scrollbar (see `.gh-contrib-scroll` in globals.css) so cells stay
+          legible at 375px. We auto-scroll to the right edge on mount so
+          today is visible first. */}
+      <div ref={scrollRef} className="mt-8 gh-contrib-scroll">
         <div className="gh-contrib">
           <div className="gh-contrib__ticks" aria-hidden>
             <span />
