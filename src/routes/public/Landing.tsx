@@ -23,8 +23,10 @@ import ProjectCard, { type ProjectSummary } from "@/components/public/ProjectCar
 import HeatmapPoster, { type HeatmapData } from "@/components/public/HeatmapPoster";
 import GitHubContribHeatmap, { type ContribData } from "@/components/public/GitHubContribHeatmap";
 import ContactCard from "@/components/public/ContactCard";
+import ReleaseLog from "@/components/public/ReleaseLog";
 import { useHashScroll } from "@/lib/useHashScroll";
 import { fmtLatency } from "@/lib/format";
+import { CURRENT_VERSION } from "@/lib/versions";
 
 type ProjectsResponse = {
   generatedAt: number;
@@ -264,6 +266,24 @@ export default function LandingPage() {
         <CommitTicker commits={commits?.commits ?? null} />
       </section>
 
+      {/* Release log — sourced from src/lib/versions.ts (PR-history
+          curated by hand to avoid shipping a /api/public/changelog GET
+          when the data never changes between deploys). */}
+      <section id="versions" className="mx-auto max-w-6xl px-6 pb-16">
+        <PosterHeading
+          eyebrow="release log"
+          headline={
+            <>
+              <span className="accent">Versions</span>
+              <span>—</span>
+              every shipped change
+            </>
+          }
+          aside={<>now serving v{CURRENT_VERSION}</>}
+        />
+        <ReleaseLog />
+      </section>
+
       {/* Contact / support — Resend-backed */}
       <section id="contact" className="mx-auto max-w-6xl px-6 pb-16">
         <PosterHeading
@@ -275,7 +295,7 @@ export default function LandingPage() {
           }
           aside={
             <>
-              <Mail className="inline h-3 w-3" /> 67@abhnv.in
+              <Mail className="inline h-3 w-3" /> abhnv@abhnv.in
             </>
           }
         />

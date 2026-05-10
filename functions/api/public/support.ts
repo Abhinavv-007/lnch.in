@@ -3,7 +3,7 @@
  *
  * Public contact endpoint. Validates payload server-side, KV rate-limits
  * to 5 messages per IP per 24h, then ships the message via Resend to
- * 67@abhnv.in. The Resend API key never leaves the Worker.
+ * abhnv@abhnv.in. The Resend API key never leaves the Worker.
  *
  * Request body (application/json):
  *   { name: string, email: string, subject?: string, message: string, source?: string }
@@ -17,7 +17,7 @@
  * Configuration:
  *   - RESEND_API_KEY      (required) — Resend API key
  *   - RESEND_FROM_ADDR    (optional) — defaults to "lnch.in <hello@lnch.in>"
- *   - SUPPORT_INBOX       (optional) — defaults to "67@abhnv.in"
+ *   - SUPPORT_INBOX       (optional) — defaults to "abhnv@abhnv.in"
  */
 import { type Env, json, nowSec } from "../../_lib/env";
 
@@ -114,7 +114,7 @@ export const onRequestPost: PagesFunction<Env> = async ({ env, request }) => {
     (env as unknown as { RESEND_FROM_ADDR?: string }).RESEND_FROM_ADDR ??
     "lnch.in <hello@lnch.in>";
   const inbox =
-    (env as unknown as { SUPPORT_INBOX?: string }).SUPPORT_INBOX ?? "67@abhnv.in";
+    (env as unknown as { SUPPORT_INBOX?: string }).SUPPORT_INBOX ?? "abhnv@abhnv.in";
 
   if (!apiKey) {
     // Surface a clear configuration error rather than silently dropping.

@@ -18,7 +18,7 @@ type SubmitState =
   | { kind: "rate"; retryInSec: number }
   | { kind: "error"; message: string };
 
-const FROM_HINT = "Direct line to 67 · usually <24h";
+const FROM_HINT = "Direct line to abhnv · usually <24h";
 
 export default function ContactCard() {
   const [name, setName] = useState("");
@@ -102,7 +102,7 @@ export default function ContactCard() {
           <div className="mt-6 space-y-3 text-xs text-fg-soft">
             <p className="flex items-center gap-2">
               <Mail className="h-3 w-3 text-accent" />
-              <code className="text-accent">67@abhnv.in</code>
+              <code className="text-accent">abhnv@abhnv.in</code>
             </p>
             <p>{FROM_HINT}</p>
             <p className="text-muted">
@@ -170,7 +170,7 @@ export default function ContactCard() {
             >
               {state.kind === "ok" ? (
                 <span className="text-accent">
-                  Sent. I'll reply from <code>67@abhnv.in</code>.
+                  Sent. I'll reply from <code>abhnv@abhnv.in</code>.
                 </span>
               ) : state.kind === "rate" ? (
                 <span className="text-muted">
