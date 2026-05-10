@@ -1,22 +1,28 @@
 type LatencyPoint = { ts: number; latencyMs: number | null; ok: boolean };
 
 /**
- * Recent-latency sparkline shown in the public landing's "latency · 24h"
- * poster. Renders three layers:
+ * Recent-latency signal strip shown in the public landing's "latency · 24h"
+ * poster.
  *
- *   1. real probe samples — one filled dot per probe, sized by ok / fail
- *   2. smoothed trend line — Catmull-Rom-ish spline over the ok samples
- *      so a single 3000ms outlier doesn't tear the path into a saw-tooth
- *   3. red ticks at the bottom row when the probe failed
+ * The previous version was a smoothed area-fill spline that looked like a
+ * mountain range — peaks-and-valleys terrain that didn't read as data.
+ * This version renders the strip as a real **signal trace**:
  *
- * Failed probes don't break the spline; the smoothed line uses only the
- * successful samples and the failures appear as red ticks underneath, so
- * the trend remains readable even on bad days.
+ *   - one thin candle per probe sample (height = latency, colour by tier)
+ *   - a dim mid-line at the rolling median, so spikes read against a
+ *     reference rather than against zero
+ *   - small accent dots on every ok sample so the trace stays legible at
+ *     a glance even when the candles are short
+ *   - red ticks at the bottom for failed probes (separate row, not folded
+ *     into the trace)
+ *
+ * The result reads like a network telemetry strip — bars rising off a
+ * baseline — not a landscape silhouette.
  */
 export default function LatencyStrip({
   points,
   maxLatency,
-  height = 44,
+  height = 56,
 }: {
   points: LatencyPoint[];
   maxLatency?: number;
@@ -26,106 +32,119 @@ export default function LatencyStrip({
     return <div className="text-xs text-muted">no probes yet</div>;
   }
 
-  // Chronological ASC so the line reads left → right with time.
+  // Chronological ASC so the trace reads left → right with time.
   const ordered = [...points].sort((a, b) => a.ts - b.ts);
-  const w = Math.max(ordered.length, 24) * 8;
-  const h = height;
+  const COL_W = 8;
+  // Reserve a 4px lane at the bottom for failure ticks so they never
+  // collide with the actual signal candles.
+  const FAIL_LANE = 4;
+  const top = 6;
+  const bot = height - 6 - FAIL_LANE;
+  const usable = bot - top;
 
-  const okSamples = ordered
-    .map((p, i) =>
-      typeof p.latencyMs === "number" && p.ok
-        ? { i, latency: p.latencyMs }
-        : null,
-    )
-    .filter((v): v is { i: number; latency: number } => v !== null);
+  const w = Math.max(ordered.length, 24) * COL_W;
+
+  const okValues = ordered
+    .map((p) => (p.ok && typeof p.latencyMs === "number" ? p.latencyMs : null))
+    .filter((v): v is number => v !== null);
 
   // Cap ceiling so a single 3500ms outlier doesn't squash everything else
   // to a flat line at the bottom of the strip. Use a multiple of the
   // median rather than the max.
-  const observed = ordered
-    .map((p) => (typeof p.latencyMs === "number" ? p.latencyMs : 0))
-    .filter((n) => n > 0);
-  const sorted = observed.slice().sort((a, b) => a - b);
+  const sorted = okValues.slice().sort((a, b) => a - b);
   const median = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 100;
-  const dynamicCeiling = Math.max(median * 6, 120);
+  const dynamicCeiling = Math.max(median * 5, 120);
   const ceiling = maxLatency ?? Math.min(dynamicCeiling, 2_500);
 
-  const xOf = (idx: number) => idx * 8 + 4;
   const yOf = (lat: number) =>
-    Math.max(3, h - 6 - (Math.min(lat, ceiling) / ceiling) * (h - 12));
+    bot - (Math.min(lat, ceiling) / ceiling) * usable;
 
-  // Catmull-Rom → cubic Bezier so the trend reads smooth.
-  const linePath = (() => {
-    if (okSamples.length === 0) return "";
-    const pts = okSamples.map((s) => ({ x: xOf(s.i), y: yOf(s.latency) }));
-    if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`;
-    let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
-    for (let i = 0; i < pts.length - 1; i++) {
-      const p0 = pts[i - 1] ?? pts[i];
-      const p1 = pts[i];
-      const p2 = pts[i + 1];
-      const p3 = pts[i + 2] ?? p2;
-      const c1x = p1.x + (p2.x - p0.x) / 6;
-      const c1y = p1.y + (p2.y - p0.y) / 6;
-      const c2x = p2.x - (p3.x - p1.x) / 6;
-      const c2y = p2.y - (p3.y - p1.y) / 6;
-      d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
-    }
-    return d;
-  })();
+  const xOf = (idx: number) => idx * COL_W + COL_W / 2;
 
-  const areaPath =
-    okSamples.length === 0
-      ? ""
-      : `${linePath} L ${xOf(okSamples[okSamples.length - 1].i)} ${h - 6} L ${xOf(okSamples[0].i)} ${h - 6} Z`;
+  // Two warning thresholds: amber once a sample is > 2× median, red over
+  // the dynamic ceiling. Below median = ok-green; gives the strip a clear
+  // "fast / nominal / slow" tier read.
+  const tierColour = (lat: number): string => {
+    if (lat > ceiling * 0.9) return "var(--signal-err)";
+    if (lat > median * 2) return "var(--signal-warn)";
+    if (lat <= median * 1.1) return "var(--signal-ok)";
+    return "var(--accent)";
+  };
+
+  const medianY = okValues.length ? yOf(median) : null;
 
   return (
     <svg
-      viewBox={`0 0 ${w} ${h}`}
+      viewBox={`0 0 ${w} ${height}`}
       preserveAspectRatio="none"
       className="block w-full"
-      style={{ height: h }}
+      style={{ height }}
+      aria-label="latency signal strip"
     >
       <defs>
-        <linearGradient id="latGrad" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.32" />
-          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.02" />
+        <linearGradient id="latStripBase" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="var(--accent)" stopOpacity="0.05" />
+          <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.0" />
         </linearGradient>
       </defs>
-      {areaPath ? <path d={areaPath} fill="url(#latGrad)" stroke="none" /> : null}
-      {linePath ? (
-        <path
-          d={linePath}
-          fill="none"
+
+      {/* Faint signal-lane background — keeps the strip grounded against
+          the poster paper without reading as a mountain range. */}
+      <rect
+        x={0}
+        y={top}
+        width={w}
+        height={usable}
+        fill="url(#latStripBase)"
+      />
+
+      {/* Median reference line. Dim-accent dashed; the candles read as
+          deltas against this rather than against the baseline. */}
+      {medianY != null ? (
+        <line
+          x1={0}
+          x2={w}
+          y1={medianY}
+          y2={medianY}
           stroke="var(--accent)"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          strokeOpacity="0.32"
+          strokeDasharray="2 4"
+          strokeWidth="1"
         />
       ) : null}
+
+      {/* Per-sample candles. Failures get a red tick in the FAIL_LANE
+          beneath the trace so the trace stays honest. */}
       {ordered.map((p, i) => {
         if (!p.ok) {
           return (
             <rect
               key={i}
-              x={xOf(i) - 1}
-              y={h - 5}
-              width={2.4}
-              height={4}
+              x={xOf(i) - 1.4}
+              y={height - FAIL_LANE - 1}
+              width={2.8}
+              height={FAIL_LANE}
               fill="var(--signal-err)"
+              rx={0.6}
             />
           );
         }
         if (typeof p.latencyMs !== "number") return null;
+        const y = yOf(p.latencyMs);
+        const colour = tierColour(p.latencyMs);
         return (
-          <circle
-            key={i}
-            cx={xOf(i)}
-            cy={yOf(p.latencyMs)}
-            r={1.6}
-            fill="var(--accent)"
-            opacity="0.85"
-          />
+          <g key={i}>
+            <rect
+              x={xOf(i) - 1}
+              y={y}
+              width={2}
+              height={Math.max(2, bot - y)}
+              fill={colour}
+              opacity="0.55"
+              rx={0.7}
+            />
+            <circle cx={xOf(i)} cy={y} r={1.7} fill={colour} />
+          </g>
         );
       })}
     </svg>

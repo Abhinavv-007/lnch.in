@@ -35,10 +35,15 @@ export default function Topbar({ onCommand }: { onCommand: () => void }) {
 
         <button
           onClick={onCommand}
-          className="ml-auto flex flex-1 max-w-xl items-center gap-3 rounded-full border border-rule bg-paper-elev px-3.5 py-2 text-sm text-fg-soft transition hover:border-accent hover:text-fg"
+          aria-label="Open command palette"
+          className="ml-auto flex min-w-0 flex-1 max-w-xl items-center gap-3 rounded-full border border-rule bg-paper-elev px-3.5 py-2 text-sm text-fg-soft transition hover:border-accent hover:text-fg"
         >
-          <Search className="h-4 w-4 text-fg-soft" />
-          <span className="truncate">Search projects, services, docs, run a command…</span>
+          <Search className="h-4 w-4 shrink-0 text-fg-soft" />
+          {/* Two placeholders: a verbose one on md+, a one-word "Search"
+              on mobile where the topbar is already crowded by the brand,
+              the New CTA, and the right-side icon stack. */}
+          <span className="truncate hidden md:inline">Search projects, services, docs, run a command…</span>
+          <span className="truncate md:hidden">Search…</span>
           <kbd className="ml-auto hidden items-center gap-1 rounded-md border border-rule bg-paper-soft px-1.5 py-0.5 text-[10px] text-fg-soft md:flex">
             <Command className="h-3 w-3" />K
           </kbd>

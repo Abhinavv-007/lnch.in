@@ -1,5 +1,6 @@
 import { Activity } from "lucide-react";
 import {
+  useEffect,
   useState,
   useRef,
   type CSSProperties,
@@ -114,6 +115,20 @@ export default function HeatmapPoster({ data }: { data: HeatmapData | null }) {
   const ticks = monthTicks(weeks);
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // On mobile the calendar grid switches to a fixed cell size + horizontal
+  // scroll so cells stay readable. Land on the right edge so the user
+  // sees today first instead of January.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || weeks.length === 0) return;
+    if (typeof window === "undefined") return;
+    if (window.innerWidth > 720) return;
+    requestAnimationFrame(() => {
+      el.scrollLeft = el.scrollWidth;
+    });
+  }, [weeks.length]);
 
   const showHover = (e: MouseEvent | FocusEvent, day: HeatmapDay) => {
     const target = e.currentTarget as HTMLElement;
@@ -164,10 +179,11 @@ export default function HeatmapPoster({ data }: { data: HeatmapData | null }) {
         </span>
       </div>
 
-      {/* `overflow: hidden` keeps the calendar contained on every viewport.
-          We size it explicitly so it always fits the card width (the cells
-          shrink instead of forcing a horizontal scrollbar). */}
-      <div className="mt-8 overflow-hidden">
+      {/* On desktop the calendar fits the card width (cells shrink). On
+          mobile we switch to a fixed 11px cell + horizontal scroll with a
+          hidden scrollbar (see `.gh-contrib-scroll` in globals.css) so
+          cells stay legible at 375px instead of squishing to 5px. */}
+      <div ref={scrollRef} className="mt-8 gh-contrib-scroll">
         <div className="gh-contrib">
           <div className="gh-contrib__ticks" aria-hidden>
             <span />

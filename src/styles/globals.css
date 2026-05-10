@@ -33,6 +33,10 @@
   --signal-info: #6fa6c9;
   --paper-grid: rgba(217, 197, 127, 0.16);
   --paper-grid-strong: rgba(217, 197, 127, 0.24);
+  /* Particle field — additive on the near-black paper. */
+  --particle-blend-mode: screen;
+  --particle-alpha-boost: 1;
+  --particle-halo-alpha: 0.18;
 }
 
 /*
@@ -61,6 +65,12 @@
   --signal-info: #2c6584;
   --paper-grid: rgba(138, 106, 45, 0.20);
   --paper-grid-strong: rgba(138, 106, 45, 0.32);
+  /* Particle field — `screen` is invisible on cream paper (light + light
+     = white), so we switch to `multiply` and bump the alpha boost so the
+     gold dots actually darken into the page. */
+  --particle-blend-mode: multiply;
+  --particle-alpha-boost: 1.55;
+  --particle-halo-alpha: 0.10;
 }
 
 html {
@@ -1074,6 +1084,36 @@ main > div,
   grid-template-columns: 36px repeat(53, 1fr);
   gap: 3px;
   align-items: center;
+}
+
+/* Mobile readability: at narrow widths, the calendar grid would shrink
+   each cell to ~5px which is unreadable and unhoverable. Switch to a
+   fixed 11px cell width and let the wrapper scroll horizontally with a
+   hidden scrollbar. The component scrolls the wrapper to the right edge
+   on mount so today is visible immediately. */
+.gh-contrib-scroll {
+  /* default = no horizontal scroll on desktop. */
+  overflow: hidden;
+}
+@media (max-width: 720px) {
+  .gh-contrib-scroll {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    /* keep the wrapper wide enough to fit the day-label column without
+       cropping the rightmost weeks. */
+    -webkit-overflow-scrolling: touch;
+  }
+  .gh-contrib-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
+  .gh-contrib-scroll .gh-contrib {
+    /* 36px label column + 53 weeks × (11px cell + 3px gap) ≈ 778px. */
+    min-width: 778px;
+  }
+  .gh-contrib-scroll .gh-contrib__ticks,
+  .gh-contrib-scroll .gh-contrib__row {
+    grid-template-columns: 36px repeat(53, 11px);
+  }
 }
 .gh-contrib__ticks { margin-bottom: 2px; height: 14px; }
 .gh-contrib__tick {
