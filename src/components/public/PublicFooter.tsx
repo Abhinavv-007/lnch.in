@@ -1,4 +1,4 @@
-import { Github, Linkedin, Mail, Terminal } from "lucide-react";
+import { Instagram, Linkedin, Mail, Terminal, Twitter } from "lucide-react";
 import { Link } from "react-router-dom";
 
 /**
@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
  * Three lanes on md+:
  *   1) tagline    — © year · /version link
  *   2) curl tease — short example of the public registry endpoint
- *   3) socials    — /developers · LinkedIn · GitHub · email
+ *   3) socials    — /developers · X · LinkedIn · Instagram · email
  *
  * On mobile the lanes stack and the socials row wraps so every link stays
  * tappable without horizontal scroll.
@@ -33,21 +33,31 @@ export default function PublicFooter() {
             <Terminal className="h-3 w-3" /> /developers
           </Link>
           <a
-            href="https://www.linkedin.com/in/abhnv07/"
+            href="https://x.com/Abhnv8"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 hover:text-accent"
-            aria-label="LinkedIn — abhnv07"
+            aria-label="X — @Abhnv8"
           >
-            <Linkedin className="h-3 w-3" /> linkedin.com/in/abhnv07
+            <Twitter className="h-3 w-3" /> x.com/Abhnv8
           </a>
           <a
-            href="https://github.com/Abhinavv-007"
+            href="https://www.linkedin.com/in/abhnv8/"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 hover:text-accent"
+            aria-label="LinkedIn — abhnv8"
           >
-            <Github className="h-3 w-3" /> github.com/Abhinavv-007
+            <Linkedin className="h-3 w-3" /> linkedin.com/in/abhnv8
+          </a>
+          <a
+            href="https://www.instagram.com/abhnv08/"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 hover:text-accent"
+            aria-label="Instagram — @abhnv08"
+          >
+            <Instagram className="h-3 w-3" /> instagram.com/abhnv08
           </a>
           <a
             href="mailto:abhnv@abhnv.in"
